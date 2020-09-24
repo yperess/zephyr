@@ -25,6 +25,11 @@
 #include <sys/util.h>
 #include <offsets.h>
 
+/* TODO(yperess) this should be guarded by a clang flag. */
+#ifndef ALIGN_WITH_INPUT
+#define ALIGN_WITH_INPUT
+#endif /* ALIGN_WITH_INPUT */
+
 /* We need to dummy out DT_NODE_HAS_STATUS when building the unittests.
  * Including devicetree.h would require generating dummy header files
  * to match what gen_defines creates, so it's easier to just dummy out

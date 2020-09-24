@@ -615,6 +615,8 @@ please check your installation. SOC roots searched: \n\
 ${SOC_ROOT}")
 endif()
 
+message(STATUS "Yuval: running cmake/app/boilerplate.cmake")
+
 include(${ZEPHYR_BASE}/cmake/target_toolchain.cmake)
 
 project(Zephyr-Kernel VERSION ${PROJECT_VERSION})

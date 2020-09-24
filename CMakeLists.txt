@@ -336,6 +336,7 @@ endif()
 # Declare MPU userspace dependencies before the linker scripts to make
 # sure the order of dependencies are met
 if(CONFIG_USERSPACE)
+  message(STATUS: "Yuval: Setting APP_SMEM_ALIGNED_DEP to app_smem_aligned_linker")
   set(APP_SMEM_ALIGNED_DEP app_smem_aligned_linker)
   set(APP_SMEM_UNALIGNED_DEP app_smem_unaligned_linker)
 endif()
@@ -344,6 +345,9 @@ get_property(TOPT GLOBAL PROPERTY TOPT)
 set_ifndef(  TOPT -Wl,-T) # clang doesn't pick -T for some reason and complains,
                           # while -Wl,-T works for both, gcc and clang
 
+message(STATUS "Yuval: CONFIG_HAVE_CUSTOM_LINKER_SCRIPT='${CONFIG_HAVE_CUSTOM_LINKER_SCRIPT}'")
+message(STATUS "Yuval: BOARD_DIR='${BOARD_DIR}'")
+message(STATUS "Yuval: SOC='${SOC_DIR}/${ARCH}/${SOC_PATH}/linker.ld'")
 if(CONFIG_HAVE_CUSTOM_LINKER_SCRIPT)
   set(LINKER_SCRIPT ${APPLICATION_SOURCE_DIR}/${CONFIG_CUSTOM_LINKER_SCRIPT})
   if(NOT EXISTS ${LINKER_SCRIPT})
@@ -362,6 +366,7 @@ endif()
 if(NOT EXISTS ${LINKER_SCRIPT})
   message(FATAL_ERROR "Could not find linker script: '${LINKER_SCRIPT}'. Corrupted configuration?")
 endif()
+message(STATUS "Yuval: LINKER_SCRIPT='${LINKER_SCRIPT}'")
 
 configure_file(version.h.in ${PROJECT_BINARY_DIR}/include/generated/version.h)
 

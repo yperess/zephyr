@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
+#
+message(STATUS "Yuval: kernel/CMakeLists.txt: adding kernel library")
 
 # kernel is a normal CMake library and not a zephyr_library because it
 # should not be --whole-archive'd
@@ -24,6 +26,7 @@ add_library(kernel
   version.c
   work_q.c
   smp.c
+  compiler_stack_protect.c
   )
 
 # Kernel files has the macro __ZEPHYR_SUPERVISOR__ set so that it
@@ -34,6 +37,11 @@ set_target_properties(
   COMPILE_DEFINITIONS
   __ZEPHYR_SUPERVISOR__
   )
+
+message(STATUS "Yuval: kernel/CMakeLists.txt CONFIG_STACK_CANARIES='${CONFIG_STACK_CANARIES}'")
+if(CONFIG_STACK_CANARIES)
+  message(STATUS "Yuval:    Adding compiler_Stack_protect.c")
+endif()
 
 target_sources_ifdef(CONFIG_STACK_CANARIES        kernel PRIVATE compiler_stack_protect.c)
 target_sources_ifdef(CONFIG_SYS_CLOCK_EXISTS      kernel PRIVATE timeout.c timer.c)

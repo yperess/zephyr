@@ -33,6 +33,7 @@ set(CMAKE_SYSTEM_VERSION ${PROJECT_VERSION})
 set(BUILD_SHARED_LIBS OFF)
 
 if(NOT (COMPILER STREQUAL "host-gcc"))
+  message(STATUS "Yuval: including '${TOOLCHAIN_ROOT}/cmake/toolchain/${ZEPHYR_TOOLCHAIN_VARIANT}/target.cmake'")
   include(${TOOLCHAIN_ROOT}/cmake/toolchain/${ZEPHYR_TOOLCHAIN_VARIANT}/target.cmake)
 endif()
 
@@ -46,9 +47,11 @@ unset(CMAKE_C_COMPILER CACHE)
 # In Zephyr, toolchains require a port under cmake/toolchain/.
 # Each toolchain port must set COMPILER and LINKER.
 # E.g. toolchain/llvm may pick {clang, ld} or {clang, lld}.
+message(STATUS "Yuval: adding bintools as custom target")
 add_custom_target(bintools)
 
-include(${TOOLCHAIN_ROOT}/cmake/compiler/${COMPILER}/target.cmake OPTIONAL)
+message(STATUS "Yuval: include(${TOOLCHAIN_ROOT}/cmake/compiler/${COMPILER}/target.cmake OPTIONAL)")
+include(${TOOLCHAIN_ROOT}/cmake/compiler/${COMPILER}/target.cmake)
 include(${TOOLCHAIN_ROOT}/cmake/linker/${LINKER}/target.cmake OPTIONAL)
 include(${CMAKE_CURRENT_LIST_DIR}/bintools/bintools_template.cmake)
 include(${TOOLCHAIN_ROOT}/cmake/bintools/${BINTOOLS}/target.cmake OPTIONAL)
@@ -61,5 +64,6 @@ include(${TOOLCHAIN_ROOT}/cmake/bintools/${BINTOOLS}/target.cmake OPTIONAL)
 #    of flags.
 # It is not clear how this signature should be constructed. The
 # strategy chosen is to md5sum the CC binary.
+message(STATUS "Yuval: CMAKE_C_COMPILER='${CMAKE_C_COMPILER}'")
 file(MD5 ${CMAKE_C_COMPILER} CMAKE_C_COMPILER_MD5_SUM)
 set(TOOLCHAIN_SIGNATURE ${CMAKE_C_COMPILER_MD5_SUM})

@@ -118,6 +118,12 @@
 			label = "SCFG";
 		};
 
+		bbram: bb-ram@400af000 {
+			compatible = "nuvoton,npcx-bbram";
+			reg = <0x400af000 0x80>;
+			label = "BBRAM";
+		};
+
 		uart1: serial@400c4000 {
 			compatible = "nuvoton,npcx-uart";
 			reg = <0x400C4000 0x2000>;

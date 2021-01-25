@@ -1,0 +1,18 @@
+# Copyright (c) 20201 Google Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: Nuvoton, NPCX Battery Backed RAM node
+
+compatible: "nuvoton,npcx-bbram"
+
+include: base.yaml
+
+properties:
+    "#address-cells":
+        required: false
+        const: 1
+    "#size-cells":
+        required: false
+        const: 1
+    reg:
+        required: true

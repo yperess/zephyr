@@ -38,6 +38,7 @@ static int syscon_generic_read_reg(const struct device *dev, uint16_t reg, uint3
 {
 	const struct syscon_generic_config *config;
 	struct syscon_generic_data *data;
+	const struct syscon_generic_config *config;
 	uintptr_t base_address;
 
 	if (!dev) {
@@ -78,6 +79,7 @@ static int syscon_generic_write_reg(const struct device *dev, uint16_t reg, uint
 {
 	const struct syscon_generic_config *config;
 	struct syscon_generic_data *data;
+	const struct syscon_generic_config *config;
 	uintptr_t base_address;
 
 	if (!dev) {

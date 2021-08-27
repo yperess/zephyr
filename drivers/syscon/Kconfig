@@ -24,11 +24,23 @@ source "subsys/logging/Kconfig.template.log_config"
 
 DT_COMPAT_SYSCON := syscon
 
+choice SYSCON_TYPE
+	prompt "Select the type of syscon driver to initialize"
+	default SYSCON_GENERIC if $(dt_compat_enabled,$(DT_COMPAT_SYSCON)) && !ZTEST
+	default SYSCON_EMUL if $(dt_compat_enabled,$(DT_COMPAT_SYSCON)) && ZTEST
+
 config SYSCON_GENERIC
 	bool "Generic SYSCON (System Controller) driver"
-	default $(dt_compat_enabled,$(DT_COMPAT_SYSCON))
 	help
 	  Enable generic SYSCON (System Controller) driver
+
+config SYSCON_EMUL
+	bool "Emulated SYSCON (System Controller) driver"
+	help
+	  Enable an emulated SYSCON (System Controller) driver which
+	  reads/writes to an allocated memory region instead of MMIO.
+
+endchoice # SYSCON_TYPE
 
 config SYSCON_INIT_PRIORITY_DEVICE
 	int "SYSCON (System Controller) init device priority"

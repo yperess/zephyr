@@ -1,0 +1,30 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	syscon4: syscon@60 {
+		compatible = "syscon";
+		status = "okay";
+		reg = <0x60 0x8>;
+		label = "SYSCON4";
+	};
+
+	syscon2: syscon@80 {
+		compatible = "syscon";
+		status = "okay";
+		reg = <0x80 0x4>;
+		reg-io-width = <2>;
+		label = "SYSCON2";
+	};
+
+	syscon1: syscon@a0 {
+		compatible = "syscon";
+		status = "okay";
+		reg = <0xa0 0x2>;
+		reg-io-width = <1>;
+		label = "SYSCON1";
+	};
+};

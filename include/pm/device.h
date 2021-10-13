@@ -144,6 +144,80 @@ struct pm_device {
 	}
 
 /**
+ * Get the name of device PM resources.
+ *
+ * @param dev_name Device name.
+ */
+#define Z_PM_DEVICE_NAME(dev_name) \
+	_CONCAT(__pm_device__, dev_name)
+
+/**
+ * Define device PM resources for the given node identifier.
+ *
+ * @param node_id Node identifier (DT_NODE_INVALID if not a DT device).
+ * @param dev_name Device name.
+ * @param pm_action_cb PM control callback.
+ */
+#define Z_PM_DEVICE_DEFINE(node_id, dev_name, pm_action_cb)		\
+	static struct pm_device Z_PM_DEVICE_NAME(dev_name) =		\
+	Z_PM_DEVICE_INIT(Z_PM_DEVICE_NAME(dev_name), node_id,		\
+			 pm_action_cb)
+
+/**
+ * Define device PM resources for the given device name.
+ *
+ * @param dev_name Device name.
+ * @param pm_action_cb PM control callback.
+ */
+#define PM_DEVICE_DEFINE(dev_name, pm_action_cb) \
+	Z_PM_DEVICE_DEFINE(DT_INVALID_NODE, dev_name, pm_action_cb)
+
+/**
+ * Define device PM resources for the given node identifier.
+ *
+ * @param node_id Node identifier.
+ * @param pm_action_cb PM control callback.
+ */
+#define PM_DEVICE_DT_DEFINE(node_id, pm_action_cb)			\
+	Z_PM_DEVICE_DEFINE(node_id, Z_DEVICE_DT_DEV_NAME(node_id),	\
+				 pm_action_cb)
+
+/**
+ * Define device PM resources for the given instance.
+ *
+ * @param idx Instance index.
+ * @param action_cb PM control callback.
+ */
+#define PM_DEVICE_DT_INST_DEFINE(idx, action_cb)			\
+	Z_PM_DEVICE_DEFINE(DT_DRV_INST(idx),				\
+				 Z_DEVICE_DT_DEV_NAME(DT_DRV_INST(idx)),\
+				 action_cb)
+
+/**
+ * @brief Obtain device PM variable for the given device.
+ *
+ * @param dev_name Device name.
+ */
+#define PM_DEVICE_GET(dev_name) \
+	Z_PM_DEVICE_NAME(dev_name)
+
+/**
+ * @brief Obtain device PM variable for the given node.
+ *
+ * @param node_id Node identifier.
+ */
+#define PM_DEVICE_DT_GET(node_id) \
+	PM_DEVICE_GET(Z_DEVICE_DT_DEV_NAME(node_id))
+
+/**
+ * @brief Obtain device PM variable for the given instance.
+ *
+ * @param idx Instance index.
+ */
+#define PM_DEVICE_DT_INST_GET(idx) \
+	PM_DEVICE_DT_GET(DT_DRV_INST(idx))
+
+/**
  * @brief Get name of device PM state
  *
  * @param state State id which name should be returned

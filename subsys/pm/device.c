@@ -31,7 +31,7 @@ int pm_device_state_set(const struct device *dev,
 	enum pm_device_action action;
 	struct pm_device *pm = dev->pm;
 
-	if (pm->action_cb == NULL) {
+	if (pm == NULL) {
 		return -ENOSYS;
 	}
 
@@ -82,7 +82,7 @@ int pm_device_state_get(const struct device *dev,
 {
 	struct pm_device *pm = dev->pm;
 
-	if (pm->action_cb == NULL) {
+	if (pm == NULL) {
 		return -ENOSYS;
 	}
 
@@ -101,7 +101,7 @@ bool pm_device_is_any_busy(void)
 	for (const struct device *dev = devs; dev < (devs + devc); dev++) {
 		struct pm_device *pm = dev->pm;
 
-		if (pm->action_cb == NULL) {
+		if (pm == NULL) {
 			continue;
 		}
 
@@ -117,7 +117,7 @@ bool pm_device_is_busy(const struct device *dev)
 {
 	struct pm_device *pm = dev->pm;
 
-	if (pm->action_cb == NULL) {
+	if (pm == NULL) {
 		return false;
 	}
 
@@ -128,7 +128,7 @@ void pm_device_busy_set(const struct device *dev)
 {
 	struct pm_device *pm = dev->pm;
 
-	if (pm->action_cb == NULL) {
+	if (pm == NULL) {
 		return;
 	}
 
@@ -139,7 +139,7 @@ void pm_device_busy_clear(const struct device *dev)
 {
 	struct pm_device *pm = dev->pm;
 
-	if (pm->action_cb == NULL) {
+	if (pm == NULL) {
 		return;
 	}
 
@@ -151,7 +151,7 @@ bool pm_device_wakeup_enable(struct device *dev, bool enable)
 	atomic_val_t flags, new_flags;
 	struct pm_device *pm = dev->pm;
 
-	if (pm->action_cb == NULL) {
+	if (pm == NULL) {
 		return false;
 	}
 
@@ -175,7 +175,7 @@ bool pm_device_wakeup_is_enabled(const struct device *dev)
 {
 	struct pm_device *pm = dev->pm;
 
-	if (pm->action_cb == NULL) {
+	if (pm == NULL) {
 		return false;
 	}
 
@@ -187,7 +187,7 @@ bool pm_device_wakeup_is_capable(const struct device *dev)
 {
 	struct pm_device *pm = dev->pm;
 
-	if (pm->action_cb == NULL) {
+	if (pm == NULL) {
 		return false;
 	}
 

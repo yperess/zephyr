@@ -21,13 +21,15 @@
 extern "C" {
 #endif
 
-struct unit_test {
+struct ztest_unit_test {
+	const char *test_suite_name;
 	const char *name;
-	void (*test)(void);
-	void (*setup)(void);
-	void (*teardown)(void);
+	void (*test)(void *data);
 	uint32_t thread_options;
 };
+
+extern struct ztest_unit_test _ztest_unit_test_list_start[];
+extern struct ztest_unit_test _ztest_unit_test_list_end[];
 
 /**
  * Stats about a ztest suite
@@ -43,13 +45,35 @@ struct ztest_suite_stats {
 
 /**
  * A single node of test suite. Each node should be added to a single linker section which will
- * allow ztest_run_registered_test_suites() to iterate over the various nodes.
+ * allow ztest_run_test_suites() to iterate over the various nodes.
  */
 struct ztest_suite_node {
 	/** The name of the test suite. */
 	const char *name;
-	/** Pointer to the test suite. */
-	struct unit_test *suite;
+	/**
+	 * Setup function to run before running this suite
+	 *
+	 * @return Pointer to the data structure that will be used throughout this test suite
+	 */
+	void *(*setup)(void);
+	/**
+	 * Function to run before each test in this suite
+	 *
+	 * @param data The test suite's data returned from setup()
+	 */
+	void (*before)(void *data);
+	/**
+	 * Function to run after each test in this suite
+	 *
+	 * @param data The test suite's data returned from setup()
+	 */
+	void (*after)(void *data);
+	/**
+	 * Teardown function to run after running this suite
+	 *
+	 * @param data The test suite's data returned from setup()
+	 */
+	void (*teardown)(void *data);
 	/**
 	 * An optional predicate function to determine if the test should run. If NULL, then the
 	 * test will only run once on the first attempt.
@@ -69,20 +93,25 @@ extern struct ztest_suite_node _ztest_suite_node_list_end[];
  * Create and register a ztest suite. Using this macro creates a new test suite (using
  * ztest_test_suite). It then creates a struct ztest_suite_node in a specific linker section.
  *
- * Tests can then be run by calling ztest_run_registered_test_suites(const void *state) by passing
- * in the current state. See the documentation for ztest_run_registered_test_suites for more info.
+ * Tests can then be run by calling ztest_run_test_suites(const void *state) by passing
+ * in the current state. See the documentation for ztest_run_test_suites for more info.
  *
  * @param SUITE_NAME The name of the suite (see ztest_test_suite for more info)
  * @param PREDICATE A function to test against the state and determine if the test should run.
- * @param args Varargs placeholder for the remaining arguments passed for the unit tests.
+ * @param setup_fn The setup function to call before running this test suite
+ * @param before_fn The function to call before each unit test in this suite
+ * @param after_fn The function to call after each unit test in this suite
+ * @param teardown_fn The function to call after running all the tests in this suite
  */
-#define ztest_register_test_suite(SUITE_NAME, PREDICATE, args...)                                  \
-	ztest_test_suite(SUITE_NAME, ##args);                                                      \
+#define ZTEST_SUITE(SUITE_NAME, PREDICATE, setup_fn, before_fn, after_fn, teardown_fn)             \
 	static STRUCT_SECTION_ITERABLE(ztest_suite_node, z_ztest_test_node_##SUITE_NAME) = {       \
 		.name = #SUITE_NAME,                                                               \
-		.suite = _##SUITE_NAME,                                                            \
+		.setup = (setup_fn),                                                               \
+		.before = (before_fn),                                                             \
+		.after = (after_fn),                                                               \
+		.teardown = (teardown_fn),                                                         \
 		.predicate = PREDICATE,                                                            \
-	};
+	}
 
 /**
  * Run the registered unit tests which return true from their pragma function.
@@ -90,7 +119,7 @@ extern struct ztest_suite_node _ztest_suite_node_list_end[];
  * @param state The current state of the machine as it relates to the test executable.
  * @return The number of tests that ran.
  */
-int ztest_run_registered_test_suites(const void *state);
+int ztest_run_test_suites(const void *state);
 
 /**
  * @brief Fails the test if any of the registered tests did not run.
@@ -101,7 +130,7 @@ int ztest_run_registered_test_suites(const void *state);
  * may be called at the end of test_main(). It will cause the test to fail if any suite was
  * registered but never ran.
  */
-void ztest_verify_all_registered_test_suites_ran(void);
+void ztest_verify_all_test_suites_ran(void);
 
 /**
  * @brief Run a test suite.
@@ -110,10 +139,9 @@ void ztest_verify_all_registered_test_suites_ran(void);
  * checks for fast failures and initialization.
  *
  * @param name The name of the suite to run.
- * @param suite Pointer to the first unit test.
  * @return Negative value if the test suite never ran; otherwise, return the number of failures.
  */
-int z_ztest_run_test_suite(const char *name, struct unit_test *suite);
+int z_ztest_run_test_suite(const char *name);
 
 /**
  * @defgroup ztest_test Ztest testing macros
@@ -160,79 +188,111 @@ static inline void unit_test_noop(void)
 {
 }
 
-/**
- * @brief Define a test with setup and teardown functions
- *
- * This should be called as an argument to ztest_test_suite. The test will
- * be run in the following order: @a setup, @a fn, @a teardown.
- *
- * @param fn Main test function
- * @param setup Setup function
- * @param teardown Teardown function
- */
+#define Z_ZTEST(suite, fn, t_options)                                                              \
+	static void _##suite##_##fn##_wrapper(void *data);                                         \
+	static void suite##_##fn(void);                                                            \
+	static STRUCT_SECTION_ITERABLE(ztest_unit_test, z_ztest_unit_test_##suite##_##fn) = {      \
+		.test_suite_name = STRINGIFY(suite),                                               \
+		.name = STRINGIFY(fn),                                                             \
+		.test = (_##suite##_##fn##_wrapper),                                               \
+		.thread_options = t_options,                                                       \
+	};                                                                                         \
+	static void _##suite##_##fn##_wrapper(void *data)                                          \
+	{                                                                                          \
+		ARG_UNUSED(data);                                                                  \
+		suite##_##fn();                                                                    \
+	}                                                                                          \
+	static inline void suite##_##fn(void)
 
-#define ztest_unit_test_setup_teardown(fn, setup, teardown) { \
-		STRINGIFY(fn), fn, setup, teardown, 0 \
-}
+#define Z_ZTEST_F(suite, fn, t_options)                                                            \
+	static void _##suite##_##fn##_wrapper(void *data);                                         \
+	static void suite##_##fn(struct suite##_fixture *this);                                    \
+	static STRUCT_SECTION_ITERABLE(ztest_unit_test, z_ztest_unit_test_##suite##_##fn) = {      \
+		.test_suite_name = STRINGIFY(suite),                                               \
+		.name = STRINGIFY(fn),                                                             \
+		.test = (_##suite##_##fn##_wrapper),                                               \
+		.thread_options = t_options,                                                       \
+	};                                                                                         \
+	static void _##suite##_##fn##_wrapper(void *data)                                          \
+	{                                                                                          \
+		suite##_##fn((struct suite##_fixture *)data);                                      \
+	}                                                                                          \
+	static inline void suite##_##fn(struct suite##_fixture *this)
 
-/**
- * @brief Define a user mode test with setup and teardown functions
- *
- * This should be called as an argument to ztest_test_suite. The test will
- * be run in the following order: @a setup, @a fn, @a teardown. ALL
- * test functions will be run in user mode, and only if CONFIG_USERSPACE
- * is enabled, otherwise this is the same as ztest_unit_test_setup_teardown().
- *
- * @param fn Main test function
- * @param setup Setup function
- * @param teardown Teardown function
- */
+#define ZTEST(suite, fn) Z_ZTEST(suite, fn, 0)
 
-#define ztest_user_unit_test_setup_teardown(fn, setup, teardown) { \
-		STRINGIFY(fn), fn, setup, teardown, K_USER \
-}
+#ifdef CONFIG_USERSPACE
+#define ZTEST_USER(suite, fn) Z_ZTEST(suite, fn, K_USER)
+#else
+#define ZTEST_USER(suite, fn)                                                                      \
+	BUILD_ASSERT(false, "Can't create userspace test without CONFIG_USERSPACE being enabled")
+#endif
+
+#define ZTEST_AUTOSPACE(suite, fn) Z_ZTEST(suite, fn, COND_VAR_1(CONFIG_USERSPACE, (K_USER), (0)))
 
 /**
  * @brief Define a test function
  *
- * This should be called as an argument to ztest_test_suite.
- *
+ * @param suite The test suite to attach this function to
  * @param fn Test function
  */
-
-#define ztest_unit_test(fn) \
-	ztest_unit_test_setup_teardown(fn, unit_test_noop, unit_test_noop)
+#define ZTEST_F(suite, fn) Z_ZTEST_F(suite, fn, 0)
 
 /**
  * @brief Define a test function that should run as a user thread
  *
- * This should be called as an argument to ztest_test_suite.
  * If CONFIG_USERSPACE is not enabled, this is functionally identical to
  * ztest_unit_test().
  *
+ * @param suite The test suite to attach this function to
  * @param fn Test function
  */
+#ifdef CONFIG_USERSPACE
+#define ZTEST_USER_F(suite, fn) Z_ZTEST_F(suite, fn, K_USER)
+#else
+#define ZTEST_USER_F(suite, fn)                                                                    \
+	BUILD_ASSERT(false, "Can't create userspace test without CONFIG_USERSPACE being enabled")
+#endif
 
-#define ztest_user_unit_test(fn) \
-	ztest_user_unit_test_setup_teardown(fn, unit_test_noop, unit_test_noop)
+#define ZTEST_AUTOSPACE_F(suite, fn)                                                               \
+	Z_ZTEST_F(suite, fn, COND_VAR_1(CONFIG_USERSPACE, (K_USER), (0)))
+
+typedef void (*ztest_rule_cb)(const struct ztest_unit_test *test, void *data);
+
+struct ztest_test_rule {
+	ztest_rule_cb before_each;
+	ztest_rule_cb after_each;
+};
+
+#define ZTEST_RULE(name, before_each_fn, after_each_fn)                                            \
+	static STRUCT_SECTION_ITERABLE(ztest_test_rule, z_ztest_test_rule_##name) = {              \
+		.before_each = (before_each_fn),                                                   \
+		.after_each = (after_each_fn),                                                     \
+	}
+
+extern struct ztest_test_rule _ztest_test_rule_list_start[];
+extern struct ztest_test_rule _ztest_test_rule_list_end[];
 
 __syscall void z_test_1cpu_start(void);
 __syscall void z_test_1cpu_stop(void);
 
 /**
- * @brief Define a SMP-unsafe test function
+ * @brief A 'before' function to use in test suites that just need to start 1cpu
  *
- * As ztest_unit_test(), but ensures all test code runs on only
- * one CPU when in SMP.
+ * Ignores data, and calls z_test_1cpu_start()
  *
- * @param fn Test function
+ * @param data The test suite's data
  */
-#ifdef CONFIG_SMP
-#define ztest_1cpu_unit_test(fn)					\
-	ztest_unit_test_setup_teardown(fn, z_test_1cpu_start, z_test_1cpu_stop)
-#else
-#define ztest_1cpu_unit_test(fn) ztest_unit_test(fn)
-#endif
+void ztest_simple_1cpu_before(void *data);
+
+/**
+ * @brief A 'after' function to use in test suites that just need to stop 1cpu
+ *
+ * Ignores data, and calls z_test_1cpu_stop()
+ *
+ * @param data The test suite's data
+ */
+void ztest_simple_1cpu_after(void *data);
 
 /**
  * @brief Define a SMP-unsafe test function that should run as a user thread
@@ -242,12 +302,15 @@ __syscall void z_test_1cpu_stop(void);
  *
  * @param fn Test function
  */
+// TODO(yperess) These should be test suites with before/after functions
+/*
 #ifdef CONFIG_SMP
 #define ztest_1cpu_user_unit_test(fn) \
 	ztest_user_unit_test_setup_teardown(fn, z_test_1cpu_start, z_test_1cpu_stop)
 #else
 #define ztest_1cpu_user_unit_test(fn) ztest_user_unit_test(fn)
 #endif
+*/
 
 /* definitions for use with testing application shared memory   */
 #ifdef CONFIG_USERSPACE
@@ -262,31 +325,12 @@ extern struct k_mem_partition ztest_mem_partition;
 #endif
 
 /**
- * @brief Define a test suite
- *
- * This function should be called in the following fashion:
- * ```{.c}
- *      ztest_test_suite(test_suite_name,
- *              ztest_unit_test(test_function),
- *              ztest_unit_test(test_other_function)
- *      );
- *
- *      ztest_run_test_suite(test_suite_name);
- * ```
- *
- * @param suite Name of the testing suite
- */
-#define ztest_test_suite(suite, ...) \
-	static ZTEST_DMEM struct unit_test _##suite[] = { \
-		__VA_ARGS__, { 0 } \
-	}
-/**
  * @brief Run the specified test suite.
  *
  * @param suite Test suite to run.
  */
 #define ztest_run_test_suite(suite) \
-	z_ztest_run_test_suite(#suite, _##suite)
+	z_ztest_run_test_suite(STRINGIFY(suite))
 
 /**
  * @}

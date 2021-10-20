@@ -73,6 +73,16 @@ config ZTEST_ASSERT_HOOK
 	  error test case. Remember to add ignore_fault tag in yaml file when
 	  using twister to run testing.
 
+menu "ztest provided rules"
+
+config ZTEST_RULE_1CPU
+	bool "Run all the tests on a single CPU"
+	help
+	  This rule will call z_test_1cpu_start before each unit test and
+	  ztest_1cpu_stop after each test.
+
+endmenu
+
 endif # ZTEST
 
 config ZTEST_MOCKING

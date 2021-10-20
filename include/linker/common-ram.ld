@@ -143,4 +143,6 @@
 
 #if defined(CONFIG_ZTEST)
 	ITERABLE_SECTION_RAM(ztest_suite_node, 4)
+	ITERABLE_SECTION_RAM(ztest_unit_test, 4)
+	ITERABLE_SECTION_RAM(ztest_test_rule, 4)
 #endif /* CONFIG_ZTEST */

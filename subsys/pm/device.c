@@ -5,6 +5,7 @@
  */
 
 #include <device.h>
+#include <init.h>
 #include <pm/device.h>
 
 #include <logging/log.h>
@@ -29,7 +30,7 @@ int pm_device_state_set(const struct device *dev,
 {
 	int ret;
 	enum pm_device_action action;
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	if (pm == NULL) {
 		return -ENOSYS;
@@ -80,7 +81,7 @@ int pm_device_state_set(const struct device *dev,
 int pm_device_state_get(const struct device *dev,
 			enum pm_device_state *state)
 {
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	if (pm == NULL) {
 		return -ENOSYS;
@@ -99,7 +100,7 @@ bool pm_device_is_any_busy(void)
 	devc = z_device_get_all_static(&devs);
 
 	for (const struct device *dev = devs; dev < (devs + devc); dev++) {
-		struct pm_device *pm = dev->pm;
+		struct pm_device *pm = dev->subsystem_hooks->pm;
 
 		if (pm == NULL) {
 			continue;
@@ -115,7 +116,7 @@ bool pm_device_is_any_busy(void)
 
 bool pm_device_is_busy(const struct device *dev)
 {
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	if (pm == NULL) {
 		return false;
@@ -126,7 +127,7 @@ bool pm_device_is_busy(const struct device *dev)
 
 void pm_device_busy_set(const struct device *dev)
 {
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	if (pm == NULL) {
 		return;
@@ -137,7 +138,7 @@ void pm_device_busy_set(const struct device *dev)
 
 void pm_device_busy_clear(const struct device *dev)
 {
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	if (pm == NULL) {
 		return;
@@ -149,7 +150,7 @@ void pm_device_busy_clear(const struct device *dev)
 bool pm_device_wakeup_enable(struct device *dev, bool enable)
 {
 	atomic_val_t flags, new_flags;
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	if (pm == NULL) {
 		return false;
@@ -173,7 +174,7 @@ bool pm_device_wakeup_enable(struct device *dev, bool enable)
 
 bool pm_device_wakeup_is_enabled(const struct device *dev)
 {
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	if (pm == NULL) {
 		return false;
@@ -185,7 +186,7 @@ bool pm_device_wakeup_is_enabled(const struct device *dev)
 
 bool pm_device_wakeup_is_capable(const struct device *dev)
 {
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	if (pm == NULL) {
 		return false;
@@ -194,3 +195,22 @@ bool pm_device_wakeup_is_capable(const struct device *dev)
 	return atomic_test_bit(&pm->flags,
 			       PM_DEVICE_FLAGS_WS_CAPABLE);
 }
+
+static int pm_device_init(const struct device *device)
+{
+	extern struct pm_device _pm_device_list_start[];
+	extern struct pm_device _pm_device_list_end[];
+	ARG_UNUSED(device);
+
+	/*
+	 * Add pointers in the device struct back to each associated pm_device struct for quicker
+	 * runtime access.
+	 */
+	for (struct pm_device *ptr = _pm_device_list_start; ptr < _pm_device_list_end; ++ptr) {
+		ptr->device->subsystem_hooks->pm = ptr;
+	}
+
+	return 0;
+}
+
+SYS_INIT(pm_device_init, POST_KERNEL, 99);

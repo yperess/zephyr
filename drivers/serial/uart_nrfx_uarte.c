@@ -1998,16 +1998,16 @@ static int uarte_nrfx_pm_control(const struct device *dev,
 			IS_ENABLED(CONFIG_UART_##idx##_INTERRUPT_DRIVEN));     \
 	}								       \
 									       \
-	PM_DEVICE_DT_DEFINE(UARTE(idx), uarte_nrfx_pm_control);		       \
-									       \
 	DEVICE_DT_DEFINE(UARTE(idx),					       \
 		      uarte_##idx##_init,				       \
-		      &PM_DEVICE_DT_GET(UARTE(idx)),			       \
+                      NULL,                                                    \
 		      &uarte_##idx##_data,				       \
 		      &uarte_##idx##z_config,				       \
 		      PRE_KERNEL_1,					       \
 		      CONFIG_SERIAL_INIT_PRIORITY,			       \
-		      &uart_nrfx_uarte_driver_api)
+		      &uart_nrfx_uarte_driver_api);                            \
+									       \
+	PM_DEVICE_DT_DEFINE(UARTE(idx), uarte_nrfx_pm_control)
 
 #define UARTE_CONFIG(idx)						       \
 	.uart_config = {						       \

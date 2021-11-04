@@ -109,6 +109,8 @@ struct pm_device {
 	atomic_t flags;
 	/** Device power state */
 	enum pm_device_state state;
+	/** The device associated with this PM */
+	const struct device *device;
 	/** Device PM action callback */
 	pm_device_action_cb_t action_cb;
 };
@@ -132,11 +134,12 @@ struct pm_device {
  * @param node_id Devicetree node for the initialized device (can be invalid).
  * @param pm_action_cb Device PM control callback function.
  */
-#define Z_PM_DEVICE_INIT(obj, node_id, pm_action_cb)			\
+#define Z_PM_DEVICE_INIT(obj, node_id, dev_name, pm_action_cb)			\
 	{								\
 		INIT_PM_DEVICE_RUNTIME(obj)				\
 		.action_cb = pm_action_cb,				\
-		.state = PM_DEVICE_STATE_ACTIVE,			\
+		.state = PM_DEVICE_STATE_ACTIVE,                        \
+                .device = &DEVICE_NAME_GET(dev_name),                       \
 		.flags = ATOMIC_INIT(COND_CODE_1(			\
 				DT_NODE_EXISTS(node_id),		\
 				(DT_PROP_OR(node_id, wakeup_source, 0)),\
@@ -158,10 +161,9 @@ struct pm_device {
  * @param dev_name Device name.
  * @param pm_action_cb PM control callback.
  */
-#define Z_PM_DEVICE_DEFINE(node_id, dev_name, pm_action_cb)		\
-	static struct pm_device Z_PM_DEVICE_NAME(dev_name) =		\
-	Z_PM_DEVICE_INIT(Z_PM_DEVICE_NAME(dev_name), node_id,		\
-			 pm_action_cb)
+#define Z_PM_DEVICE_DEFINE(node_id, dev_name, pm_action_cb)                                        \
+	static STRUCT_SECTION_ITERABLE(pm_device, Z_PM_DEVICE_NAME(dev_name)) =                    \
+		Z_PM_DEVICE_INIT(Z_PM_DEVICE_NAME(dev_name), node_id, dev_name, pm_action_cb)
 
 /**
  * Define device PM resources for the given device name.

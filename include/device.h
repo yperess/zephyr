@@ -367,6 +367,12 @@ struct device_state {
 	bool initialized : 1;
 };
 
+struct device_subsystem_hooks {
+#ifdef CONFIG_PM_DEVICE
+	struct pm_device * pm;
+#endif
+};
+
 /**
  * @brief Runtime device structure (in ROM) per driver instance
  */
@@ -389,10 +395,8 @@ struct device {
 	 * device_required_handles_get().
 	 */
 	const device_handle_t *const handles;
-#ifdef CONFIG_PM_DEVICE
-	/** Reference to the device PM resources. */
-	struct pm_device * const pm;
-#endif
+	/** Data needed to support various device subsystems */
+	struct device_subsystem_hooks * const subsystem_hooks;
 };
 
 /**
@@ -773,6 +777,7 @@ BUILD_ASSERT(sizeof(device_handle_t) == 2, "fix the linker scripts");
  */
 #define Z_DEVICE_DEFINE(node_id, dev_name, drv_name, init_fn, pm_device,\
 			data_ptr, cfg_ptr, level, prio, api_ptr, ...)	\
+        static struct device_subsystem_hooks _CONCAT(subsystem_hooks_, dev_name); \
 	Z_DEVICE_DEFINE_PRE(node_id, dev_name, pm_action_cb, __VA_ARGS__) \
 	COND_CODE_1(DT_NODE_EXISTS(node_id), (), (static))		\
 		const Z_DECL_ALIGN(struct device)			\
@@ -783,7 +788,7 @@ BUILD_ASSERT(sizeof(device_handle_t) == 2, "fix the linker scripts");
 		.api = (api_ptr),					\
 		.state = &Z_DEVICE_STATE_NAME(dev_name),		\
 		.data = (data_ptr),					\
-		COND_CODE_1(CONFIG_PM_DEVICE, (.pm = pm_device,), ())	\
+                .subsystem_hooks = &(_CONCAT(subsystem_hooks_, dev_name)),       \
 		Z_DEVICE_DEFINE_INIT(node_id, dev_name)			\
 	};								\
 	BUILD_ASSERT(sizeof(Z_STRINGIFY(drv_name)) <= Z_DEVICE_MAX_NAME_LEN, \

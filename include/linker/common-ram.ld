@@ -144,3 +144,7 @@
 #if defined(CONFIG_ZTEST)
 	ITERABLE_SECTION_RAM(ztest_suite_node, 4)
 #endif /* CONFIG_ZTEST */
+
+#ifdef CONFIG_PM_DEVICE
+	ITERABLE_SECTION_RAM(pm_device, 4)
+#endif /* CONFIG_PM_DEVICE */

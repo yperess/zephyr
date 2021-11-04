@@ -60,7 +60,7 @@ static int pm_device_request(const struct device *dev,
 			enum pm_device_state state, uint32_t pm_flags)
 {
 	int ret = 0;
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	SYS_PORT_TRACING_FUNC_ENTER(pm, device_request, dev, state);
 
@@ -173,7 +173,7 @@ int pm_device_put_async(const struct device *dev)
 
 void pm_device_enable(const struct device *dev)
 {
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	SYS_PORT_TRACING_FUNC_ENTER(pm, device_enable, dev);
 	if (k_is_pre_kernel()) {
@@ -214,7 +214,7 @@ out:
 
 void pm_device_disable(const struct device *dev)
 {
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	SYS_PORT_TRACING_FUNC_ENTER(pm, device_disable, dev);
 	__ASSERT(k_is_pre_kernel() == false, "Device should not be disabled "
@@ -233,7 +233,7 @@ void pm_device_disable(const struct device *dev)
 int pm_device_wait(const struct device *dev, k_timeout_t timeout)
 {
 	int ret = 0;
-	struct pm_device *pm = dev->pm;
+	struct pm_device *pm = dev->subsystem_hooks->pm;
 
 	k_mutex_lock(&pm->lock, K_FOREVER);
 	while ((k_work_delayable_is_pending(&pm->work)) ||

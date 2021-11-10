@@ -259,7 +259,9 @@ static void start_client(void)
 				  0, K_NO_WAIT);
 }
 
-void test_msgq_usage(void)
+ZTEST_SUITE(msgq_usage, NULL, NULL, NULL, NULL, NULL);
+
+ZTEST(msgq_usage, test_msgq_usage)
 {
 	start_service_manager();
 	register_service();
@@ -282,10 +284,4 @@ void test_msgq_usage(void)
 	k_thread_join(tservice2, K_FOREVER);
 	k_thread_join(tclient, K_FOREVER);
 	k_thread_abort(tservice_manager);
-}
-
-void test_main(void)
-{
-	ztest_test_suite(msgq_usage, ztest_unit_test(test_msgq_usage));
-	ztest_run_test_suite(msgq_usage);
 }

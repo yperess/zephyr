@@ -74,7 +74,9 @@ static const unsigned char compressed_inc_file[] = {
 	0x8c, 0x05, 0x29, 0x00, 0x01, 0x00, 0x00,
 };
 
-static void test_gen_inc_file(void)
+ZTEST_SUITE(gen_inc_file_test, NULL, NULL, NULL, NULL, NULL);
+
+ZTEST(gen_inc_file_test, test_gen_inc_file)
 {
 	int i;
 
@@ -109,7 +111,7 @@ static void do_test_gen_gz_inc_file(const unsigned char gz_inc_file[],
 	}
 }
 
-static void test_gen_gz_inc_file_no_mtime(void)
+ZTEST(gen_inc_file_test, test_gen_gz_inc_file_no_mtime)
 {
 	zassert_equal(sizeof(no_mtime_gz_inc_file), sizeof(compressed_inc_file),
 		      "Invalid compressed file size");
@@ -117,21 +119,10 @@ static void test_gen_gz_inc_file_no_mtime(void)
 	do_test_gen_gz_inc_file(no_mtime_gz_inc_file, mtime_zero);
 }
 
-static void test_gen_gz_inc_file_mtime_arg(void)
+ZTEST(gen_inc_file_test, test_gen_gz_inc_file_mtime_arg)
 {
 	zassert_equal(sizeof(mtime_gz_inc_file), sizeof(compressed_inc_file),
 		      "Invalid compressed file size");
 
 	do_test_gen_gz_inc_file(mtime_gz_inc_file, mtime_test_val);
-}
-
-void test_main(void)
-{
-	ztest_test_suite(gen_inc_file_test,
-			 ztest_unit_test(test_gen_inc_file),
-			 ztest_unit_test(test_gen_gz_inc_file_no_mtime),
-			 ztest_unit_test(test_gen_gz_inc_file_mtime_arg)
-			 );
-
-	ztest_run_test_suite(gen_inc_file_test);
 }

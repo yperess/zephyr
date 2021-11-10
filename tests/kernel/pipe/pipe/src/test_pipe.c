@@ -402,6 +402,9 @@ void pipe_put_timeout(void)
 	int return_value;
 
 	/* 1. fill the pipe. */
+	written = k_pipe_write_avail(&test_pipe);
+	zassert_equal(written, PIPE_SIZE, "Expected %u bytes available for writing, but got %u",
+		      PIPE_SIZE, written);
 	return_value = k_pipe_put(&test_pipe, &tx_buffer,
 				  PIPE_SIZE, &written,
 				  PIPE_SIZE, TIMEOUT_VAL);
@@ -685,6 +688,21 @@ void k_sys_fatal_error_handler(unsigned int reason, const z_arch_esf_t *pEsf)
 /******************************************************************************/
 /* Test case entry points */
 
+static void test_pipe_before(void *data)
+{
+	size_t current_size;
+	uint8_t dest[PIPE_SIZE];
+	size_t bytes_read;
+
+	ARG_UNUSED(data);
+
+	while ((current_size = k_pipe_read_avail(&test_pipe)) != 0) {
+		k_pipe_get(&test_pipe, dest, current_size, &bytes_read, 1, K_NO_WAIT);
+	}
+}
+
+ZTEST_SUITE(test_pipe, NULL, NULL, test_pipe_before, NULL, NULL);
+
 /**
  * @brief Verify pipe with 1 element insert.
  *
@@ -722,7 +740,7 @@ void k_sys_fatal_error_handler(unsigned int reason, const z_arch_esf_t *pEsf)
  *
  * @see k_pipe_put(), k_pipe_get()
  */
-void test_pipe_on_single_elements(void)
+ZTEST_USER(test_pipe, test_pipe_on_single_elements)
 {
 	/* initialize the tx buffer */
 	for (int i = 0; i < sizeof(tx_buffer); i++) {
@@ -748,7 +766,7 @@ void test_pipe_on_single_elements(void)
  * @ingroup kernel_pipe_tests
  * @see k_pipe_put()
  */
-void test_pipe_on_multiple_elements(void)
+ZTEST_USER(test_pipe, test_pipe_on_multiple_elements)
 {
 	k_thread_create(&get_single_tid, stack_1, STACK_SIZE,
 			pipe_get_multiple, NULL, NULL, NULL,
@@ -766,7 +784,7 @@ void test_pipe_on_multiple_elements(void)
  * @ingroup kernel_pipe_tests
  * @see k_pipe_put()
  */
-void test_pipe_forever_wait(void)
+ZTEST_USER(test_pipe, test_pipe_forever_wait)
 {
 	k_thread_create(&get_single_tid, stack_1, STACK_SIZE,
 			pipe_get_forever_wait, NULL, NULL, NULL,
@@ -817,7 +835,7 @@ void test_pipe_forever_wait(void)
  *
  * @see k_pipe_put()
  */
-void test_pipe_timeout(void)
+ZTEST_USER(test_pipe, test_pipe_timeout)
 {
 	k_thread_create(&get_single_tid, stack_1, STACK_SIZE,
 			pipe_get_timeout, NULL, NULL, NULL,
@@ -835,7 +853,7 @@ void test_pipe_timeout(void)
  * @ingroup kernel_pipe_tests
  * @see k_pipe_get()
  */
-void test_pipe_get_on_empty_pipe(void)
+ZTEST_USER(test_pipe, test_pipe_get_on_empty_pipe)
 {
 	pipe_get_on_empty_pipe();
 	ztest_test_pass();
@@ -848,7 +866,7 @@ void test_pipe_get_on_empty_pipe(void)
  * @ingroup kernel_pipe_tests
  * @see k_pipe_put()
  */
-void test_pipe_forever_timeout(void)
+ZTEST_USER(test_pipe, test_pipe_forever_timeout)
 {
 	k_thread_priority_set(k_current_get(), K_PRIO_PREEMPT(0));
 
@@ -867,7 +885,7 @@ void test_pipe_forever_timeout(void)
  * @ingroup kernel_pipe_tests
  * @see k_pipe_get()
  */
-void test_pipe_get_timeout(void)
+ZTEST_USER(test_pipe, test_pipe_get_timeout)
 {
 	pipe_put_get_timeout();
 
@@ -879,7 +897,7 @@ void test_pipe_get_timeout(void)
  * @ingroup kernel_pipe_tests
  * @see k_pipe_get()
  */
-void test_pipe_get_invalid_size(void)
+ZTEST_USER(test_pipe, test_pipe_get_invalid_size)
 {
 	size_t read;
 	int ret;
@@ -898,7 +916,7 @@ void test_pipe_get_invalid_size(void)
  * @ingroup kernel_pipe_tests
  * @see k_pipe_get()
  */
-void test_pipe_get_min_xfer(void)
+ZTEST_USER(test_pipe, test_pipe_get_min_xfer)
 {
 	int res;
 	size_t bytes_written = 0;
@@ -921,7 +939,7 @@ void test_pipe_get_min_xfer(void)
  * @ingroup kernel_pipe_tests
  * @see k_pipe_put()
  */
-void test_pipe_put_min_xfer(void)
+ZTEST_USER(test_pipe, test_pipe_put_min_xfer)
 {
 	int res;
 	size_t bytes_written = 0;
@@ -979,7 +997,7 @@ void test_pipe_put_min_xfer(void)
  *
  * @see k_pipe_init()
  */
-void test_pipe_define_at_runtime(void)
+ZTEST(test_pipe, test_pipe_define_at_runtime)
 {
 	unsigned char ring_buffer[PIPE_SIZE];
 	struct k_pipe pipe;

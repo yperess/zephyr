@@ -27,19 +27,7 @@ extern struct k_sem end_sema;
 extern struct k_thread tdata;
 K_THREAD_STACK_EXTERN(tstack);
 
-static void msgq_api_1cpu_before(void *data)
-{
-	ARG_UNUSED(data);
-	z_test_1cpu_start();
-}
-
-static void msgq_api_1cpu_after(void *data)
-{
-	ARG_UNUSED(data);
-	z_test_1cpu_stop();
-}
-
-ZTEST_SUITE(msgq_api_1cpu, NULL, NULL, msgq_api_1cpu_before, msgq_api_1cpu_after, NULL);
+ZTEST_SUITE(msgq_api_1cpu, NULL, NULL, ztest_simple_1cpu_before, ztest_simple_1cpu_after, NULL);
 ZTEST_SUITE(msgq_api, NULL, NULL, NULL, NULL, NULL);
 
 /*test case main entry*/

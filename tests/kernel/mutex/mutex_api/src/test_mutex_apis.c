@@ -188,7 +188,11 @@ static void tThread_waiter(void *p1, void *p2, void *p3)
 }
 
 /*test cases*/
-void test_mutex_reent_lock_forever(void)
+
+ZTEST_SUITE(mutex_api_1cpu, NULL, NULL, ztest_simple_1cpu_before, ztest_simple_1cpu_after, NULL);
+ZTEST_SUITE(mutex_api, NULL, NULL, NULL, NULL, NULL);
+
+ZTEST_USER(mutex_api_1cpu, test_mutex_reent_lock_forever)
 {
 	/**TESTPOINT: test k_mutex_init mutex*/
 	k_mutex_init(&mutex);
@@ -200,7 +204,7 @@ void test_mutex_reent_lock_forever(void)
 	k_thread_abort(&tdata);
 }
 
-void test_mutex_reent_lock_no_wait(void)
+ZTEST_USER(mutex_api, test_mutex_reent_lock_no_wait)
 {
 	/**TESTPOINT: test k_mutex_init mutex*/
 	tmutex_test_lock(&mutex, tThread_entry_lock_no_wait);
@@ -209,7 +213,7 @@ void test_mutex_reent_lock_no_wait(void)
 	tmutex_test_lock(&kmutex, tThread_entry_lock_no_wait);
 }
 
-void test_mutex_reent_lock_timeout_fail(void)
+ZTEST_USER(mutex_api, test_mutex_reent_lock_timeout_fail)
 {
 	/**TESTPOINT: test k_mutex_init mutex*/
 	tmutex_test_lock_timeout(&mutex, tThread_entry_lock_timeout_fail);
@@ -218,7 +222,7 @@ void test_mutex_reent_lock_timeout_fail(void)
 	tmutex_test_lock_timeout(&kmutex, tThread_entry_lock_no_wait);
 }
 
-void test_mutex_reent_lock_timeout_pass(void)
+ZTEST_USER(mutex_api_1cpu, test_mutex_reent_lock_timeout_pass)
 {
 	/**TESTPOINT: test k_mutex_init mutex*/
 	tmutex_test_lock_timeout(&mutex, tThread_entry_lock_timeout_pass);
@@ -227,7 +231,7 @@ void test_mutex_reent_lock_timeout_pass(void)
 	tmutex_test_lock_timeout(&kmutex, tThread_entry_lock_no_wait);
 }
 
-void test_mutex_lock_unlock(void)
+ZTEST_USER(mutex_api_1cpu, test_mutex_lock_unlock)
 {
 	/**TESTPOINT: test k_mutex_init mutex*/
 	tmutex_test_lock_unlock(&mutex);
@@ -243,7 +247,7 @@ void test_mutex_lock_unlock(void)
  * reaches zero.
  * @ingroup kernel_mutex_tests
  */
-void test_mutex_recursive(void)
+ZTEST_USER(mutex_api, test_mutex_recursive)
 {
 	k_mutex_init(&mutex);
 
@@ -294,7 +298,7 @@ void test_mutex_recursive(void)
  *   wait for timeout and T3 got the mutex.
  * @ingroup kernel_mutex_tests
  */
-void test_mutex_priority_inheritance(void)
+ZTEST_USER(mutex_api, test_mutex_priority_inheritance)
 {
 	/**TESTPOINT: run test case 1, given priority T1 < T2 */
 	k_mutex_init(&mutex);
@@ -393,14 +397,6 @@ void test_main(void)
 				&tstack2, &tdata3, &tstack3, &kmutex,
 				&mutex);
 
-	ztest_test_suite(mutex_api,
-		 ztest_1cpu_user_unit_test(test_mutex_lock_unlock),
-		 ztest_1cpu_user_unit_test(test_mutex_reent_lock_forever),
-		 ztest_user_unit_test(test_mutex_reent_lock_no_wait),
-		 ztest_user_unit_test(test_mutex_reent_lock_timeout_fail),
-		 ztest_1cpu_user_unit_test(test_mutex_reent_lock_timeout_pass),
-		 ztest_user_unit_test(test_mutex_recursive),
-		 ztest_user_unit_test(test_mutex_priority_inheritance)
-		 );
-	ztest_run_test_suite(mutex_api);
+	ztest_run_test_suites(NULL);
+	ztest_verify_all_test_suites_ran();
 }

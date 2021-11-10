@@ -279,6 +279,8 @@ void task_low(void)
 	lifo_tests(FOURTH_SECOND, &task_low_state, my_lifo_get, k_sem_take);
 }
 
+ZTEST_SUITE(pend, NULL, NULL, NULL, NULL, NULL);
+
 /**
  * @brief Test pending
  *
@@ -294,7 +296,7 @@ void task_low(void)
  *
  * @see k_sleep(), K_THREAD_DEFINE()
  */
-void test_pending_fifo(void)
+ZTEST(pend, test_pending_fifo)
 {
 	/*
 	 * Main thread(test_main) priority was 9 but ztest thread runs at
@@ -361,7 +363,7 @@ void test_pending_fifo(void)
 }
 
 
-void test_pending_lifo(void)
+ZTEST(pend, test_pending_lifo)
 {
 	/*
 	 * Main thread(test_main) priority was 9 but ztest thread runs at
@@ -428,7 +430,7 @@ void test_pending_lifo(void)
 
 }
 
-void test_pending_timer(void)
+ZTEST(pend, test_pending_timer)
 {
 	/*
 	 * Main thread(test_main) priority was 9 but ztest thread runs at
@@ -470,15 +472,6 @@ void test_pending_timer(void)
 /**
  * @}
  */
-void test_main(void)
-{
-	ztest_test_suite(pend,
-			ztest_1cpu_unit_test(test_pending_fifo),
-			ztest_1cpu_unit_test(test_pending_lifo),
-			ztest_1cpu_unit_test(test_pending_timer)
-			);
-	ztest_run_test_suite(pend);
-}
 
 K_THREAD_DEFINE(TASK_LOW, PREEM_STACKSIZE, task_low, NULL, NULL, NULL,
 		7, 0, 0);

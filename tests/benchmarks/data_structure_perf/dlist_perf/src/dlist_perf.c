@@ -22,6 +22,8 @@ struct container_node {
 	int value;
 };
 
+ZTEST_SUITE(test_dlist, NULL, NULL, NULL, NULL, NULL);
+
 /**
  * @brief Test whether dlist node struct is embeddedable
  * in any user structure
@@ -38,8 +40,7 @@ struct container_node {
  *
  * @see sys_dlist_append()
  */
-
-void test_dlist_container(void)
+ZTEST(test_dlist, test_dlist_container)
 {
 	int i, count;
 	struct container_node *cnode, *s_cnode;
@@ -100,8 +101,7 @@ void test_dlist_container(void)
  * @see SYS_DLIST_FOR_EACH_NODE(),SYS_DLIST_FOR_EACH_NODE_SAFE()
  * SYS_DLIST_ITERATE_FROM_NODE()
  */
-
-void test_dlist_for_each(void)
+ZTEST(test_dlist, test_dlist_for_each)
 {
 	int i, count, val;
 	sys_dnode_t *node, *s_node;
@@ -183,7 +183,7 @@ void test_dlist_for_each(void)
  *
  * @ingroup lib_dlist_tests
  */
-void test_dlist_peak_head_tail(void)
+ZTEST(test_dlist, test_dlist_peak_head_tail)
 {
 	sys_dlist_t list;
 	sys_dnode_t node[10];
@@ -219,7 +219,7 @@ void test_dlist_peak_head_tail(void)
  *
  * @ingroup lib_dlist_tests
  */
-void test_dlist_insert_and_remove(void)
+ZTEST(test_dlist, test_dlist_insert_and_remove)
 {
 	sys_dlist_t list;
 	sys_dlist_t node[10];
@@ -252,16 +252,4 @@ void test_dlist_insert_and_remove(void)
 		&node[ARRAY_SIZE(node)/2]), "dlist can't insert a node in constant time");
 	zassert_true(insert_node != sys_dlist_peek_next(&list,
 		&node[ARRAY_SIZE(node)/2 - 1]), "dlist can't remove a node in constant time");
-}
-
-/* ztest main entry */
-void test_main(void)
-{
-	ztest_test_suite(test_dlist,
-			ztest_unit_test(test_dlist_container),
-			ztest_unit_test(test_dlist_for_each),
-			ztest_unit_test(test_dlist_peak_head_tail),
-			ztest_unit_test(test_dlist_insert_and_remove)
-			);
-	ztest_run_test_suite(test_dlist);
 }

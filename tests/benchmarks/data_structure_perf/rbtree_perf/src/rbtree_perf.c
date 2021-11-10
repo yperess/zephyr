@@ -21,6 +21,8 @@ struct container_node {
 static struct rbnode nodes[TREE_SIZE];
 static struct rbtree tree;
 
+ZTEST_SUITE(rbtree, NULL, NULL, NULL, NULL, NULL);
+
 /* Our "lessthan" is just the location of the struct */
 bool node_lessthan(struct rbnode *a, struct rbnode *b)
 {
@@ -71,7 +73,7 @@ bool node_lessthan(struct rbnode *a, struct rbnode *b)
  *
  * @see RB_FOR_EACH(),RB_FOR_EACH_CONTAINER()
  */
-void test_rbtree_container(void)
+ZTEST(rbtree, test_rbtree_container)
 {
 	int count = 0;
 	struct rbtree test_tree_l;
@@ -186,7 +188,7 @@ void verify_rbtree_perf(struct rbnode *root, struct rbnode *test)
  *
  * @see rb_get_min(), rb_get_max()
  */
-void test_rbtree_perf(void)
+ZTEST(rbtree, test_rbtree_perf)
 {
 	init_tree(&tree, TREE_SIZE);
 	struct rbnode *root = tree.root;
@@ -205,13 +207,4 @@ void test_rbtree_perf(void)
 	 */
 	test = &nodes[TREE_SIZE/2];
 	verify_rbtree_perf(root, test);
-}
-
-void test_main(void)
-{
-	ztest_test_suite(rbtree,
-			 ztest_unit_test(test_rbtree_container),
-			 ztest_unit_test(test_rbtree_perf)
-			 );
-	ztest_run_test_suite(rbtree);
 }

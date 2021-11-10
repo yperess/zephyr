@@ -69,6 +69,8 @@ static ZTEST_BMEM SYS_MUTEX_DEFINE(not_my_mutex);
 static ZTEST_BMEM SYS_MUTEX_DEFINE(bad_count_mutex);
 extern void test_mutex_multithread_competition(void);
 
+ZTEST_SUITE(mutex_complex, NULL, NULL, NULL, NULL, NULL);
+
 /**
  *
  * thread_05 -
@@ -245,8 +247,7 @@ extern void thread_12(void);
  *
  * @return  N/A
  */
-
-void test_mutex(void)
+ZTEST_AUTOSPACE(mutex_complex, test_mutex)
 {
 	/*
 	 * Main thread(test_main) priority was 10 but ztest thread runs at
@@ -362,7 +363,7 @@ void test_mutex(void)
 	TC_PRINT("Recursive locking tests successful\n");
 }
 
-void test_supervisor_access(void)
+ZTEST_AUTOSPACE(mutex_complex, test_supervisor_access)
 {
 	int rv;
 
@@ -384,19 +385,17 @@ void test_supervisor_access(void)
 	zassert_true(rv == -EINVAL, "mutex wasn't locked");
 }
 
-void test_user_access(void)
-{
 #ifdef CONFIG_USERSPACE
+ZTEST_USER(mutex_complex, test_user_access)
+{
 	int rv;
 
 	rv = sys_mutex_lock(&no_access_mutex, K_NO_WAIT);
 	zassert_true(rv == -EACCES, "accessed mutex not in memory domain");
 	rv = sys_mutex_unlock(&no_access_mutex);
 	zassert_true(rv == -EACCES, "accessed mutex not in memory domain");
-#else
-	ztest_test_skip();
-#endif /* CONFIG_USERSPACE */
 }
+#endif /* CONFIG_USERSPACE */
 
 K_THREAD_DEFINE(THREAD_05, STACKSIZE, thread_05, NULL, NULL, NULL,
 		5, K_USER, 0);
@@ -436,22 +435,6 @@ void test_main(void)
 	 * This requires us to not attempt to start the tests in user
 	 * mode, as this will otherwise fail an assertion in the thread code.
 	 */
-#ifdef CONFIG_USERSPACE
-	ztest_test_suite(mutex_complex,
-			 ztest_user_unit_test(test_mutex),
-			 ztest_user_unit_test(test_user_access),
-			 ztest_unit_test(test_supervisor_access));
-
-	ztest_run_test_suite(mutex_complex);
-#else
-	ztest_test_suite(mutex_complex,
-			 ztest_unit_test(test_mutex),
-			 ztest_unit_test(test_user_access),
-			 ztest_unit_test(test_supervisor_access),
-			 ztest_unit_test(test_mutex_multithread_competition));
-
-	ztest_run_test_suite(mutex_complex);
-#endif
-
-
+	ztest_run_test_suites(NULL);
+	ztest_verify_all_test_suites_ran();
 }

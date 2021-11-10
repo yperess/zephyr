@@ -86,7 +86,8 @@ static void high_prio_t2_wait_for_mutex(void *p1, void *p2, void *p3)
  *
  * @ingroup kernel_mutex_tests
  */
-void test_mutex_multithread_competition(void)
+#ifndef CONFIG_USERSPACE
+ZTEST(mutex_complex, test_mutex_multithread_competition)
 {
 	int old_prio = k_thread_priority_get(k_current_get());
 	int prio = 10;
@@ -136,3 +137,4 @@ void test_mutex_multithread_competition(void)
 	/* Revert priority of the main thread */
 	k_thread_priority_set(k_current_get(), old_prio);
 }
+#endif /* !CONFIG_USERSPACE */

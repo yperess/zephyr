@@ -150,7 +150,7 @@ static void user_thread_entry(uint32_t irq_line)
 #endif
 }
 
-void test_arm_syscalls(void)
+ZTEST(arm_thread_swap, test_arm_syscalls)
 {
 	int i = 0;
 
@@ -279,7 +279,7 @@ static inline void z_vrfy_test_arm_cpu_write_reg(void)
  *
  * @ingroup kernel_memprotect_tests
  */
-void test_syscall_cpu_scrubs_regs(void)
+ZTEST_USER(arm_thread_swap, test_syscall_cpu_scrubs_regs)
 {
 	uint32_t arm_reg_val[4];
 
@@ -296,17 +296,6 @@ void test_syscall_cpu_scrubs_regs(void)
 				"not scrubbed after system call.");
 	}
 }
-#else
-void test_syscall_cpu_scrubs_regs(void)
-{
-	ztest_test_skip();
-}
-
-void test_arm_syscalls(void)
-{
-	ztest_test_skip();
-}
-
 #endif /* CONFIG_USERSPACE */
 /**
  * @}

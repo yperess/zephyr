@@ -69,7 +69,7 @@ static inline void z_vrfy_test_cpu_write_reg(void)
  *
  * @ingroup kernel_memprotect_tests
  */
-void test_syscall_cpu_scrubs_regs(void)
+ZTEST_USER(test_x86_cpu_scrubs_regs, test_syscall_cpu_scrubs_regs)
 {
 #if CONFIG_X86
 #ifndef CONFIG_X86_64
@@ -125,9 +125,4 @@ void test_syscall_cpu_scrubs_regs(void)
 #endif
 }
 
-void test_main(void)
-{
-	ztest_test_suite(test_x86_cpu_scrubs_regs,
-		ztest_user_unit_test(test_syscall_cpu_scrubs_regs));
-	ztest_run_test_suite(test_x86_cpu_scrubs_regs);
-}
+ZTEST_SUITE(test_x86_cpu_scrubs_regs, NULL, NULL, NULL, NULL, NULL);

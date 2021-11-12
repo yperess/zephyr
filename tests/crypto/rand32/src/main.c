@@ -28,7 +28,7 @@
  * @return N/A
  */
 
-void test_rand32(void)
+ZTEST(rand32_common_test, test_rand32)
 {
 	uint32_t gen, last_gen, tmp;
 	int rnd_cnt;
@@ -115,9 +115,4 @@ void test_rand32(void)
 }
 
 
-void test_main(void)
-{
-	ztest_test_suite(common_test, ztest_unit_test(test_rand32));
-
-	ztest_run_test_suite(common_test);
-}
+ZTEST_SUITE(rand32_common_test, NULL, NULL, NULL, NULL, NULL);

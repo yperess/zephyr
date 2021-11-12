@@ -24,7 +24,7 @@ uint8_t test_data[2] = {0xAA, 0xAA};
  * - read data from pca95xx
  * - check read data whether correct
  */
-void test_i2c_pca95xx(void)
+ZTEST(i2c_test, test_i2c_pca95xx)
 {
 	int32_t ret;
 	uint8_t datas[3];
@@ -62,10 +62,4 @@ void test_i2c_pca95xx(void)
 	zassert_true(ret == 0, "Read data is different to write data");
 }
 
-void test_main(void)
-{
-	ztest_test_suite(i2c_test,
-			ztest_unit_test(test_i2c_pca95xx)
-			);
-	ztest_run_test_suite(i2c_test);
-}
+ZTEST_SUITE(i2c_test, NULL, NULL, NULL, NULL, NULL);

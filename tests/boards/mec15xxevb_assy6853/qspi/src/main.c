@@ -53,7 +53,7 @@ struct spi_config spi_cfg_single, spi_cfg_dual, spi_cfg_quad;
  * - Find spi device
  * - Read flash jedec id
  */
-void test_spi_device(void)
+ZTEST(test_spi, test_spi_device)
 {
 	uint32_t jedec_id;
 	int ret;
@@ -101,7 +101,7 @@ void test_spi_device(void)
  * - erase data in flash device
  * - read register1 and wait for erase operation completed
  */
-void test_spi_sector_erase(void)
+ZTEST(test_spi, test_spi_sector_erase)
 {
 	int ret;
 
@@ -177,7 +177,7 @@ void test_spi_sector_erase(void)
  * - flash write enable
  * - write data into flash using spi api
  */
-void test_spi_single_write(void)
+ZTEST(test_spi, test_spi_single_write)
 {
 	int ret;
 
@@ -228,7 +228,7 @@ void test_spi_single_write(void)
  * - read data using spi single mode
  * - check read buffer data whether correct
  */
-void test_spi_single_read(void)
+ZTEST(test_spi, test_spi_single_read)
 {
 	int ret;
 	uint8_t cnt = 0;
@@ -281,7 +281,7 @@ void test_spi_single_read(void)
  * - read data using spi dual mode
  * - check read buffer data whether correct
  */
-void test_spi_dual_read(void)
+ZTEST(test_spi, test_spi_dual_read)
 {
 	int ret;
 	uint8_t cnt = 0;
@@ -354,7 +354,7 @@ void test_spi_dual_read(void)
  * - check and make sure spi quad mode is enabled
  * - write data using spi quad mode
  */
-void test_spi_quad_write(void)
+ZTEST(test_spi, test_spi_quad_write)
 {
 	int ret;
 	uint8_t spi_status2;
@@ -530,7 +530,7 @@ void test_spi_quad_write(void)
  * - read data using spi quad mode
  * - check read buffer data whether correct
  */
-void test_spi_quad_read(void)
+ZTEST(test_spi, test_spi_quad_read)
 {
 	int ret;
 	uint8_t cnt = 0;
@@ -596,7 +596,7 @@ void test_spi_quad_read(void)
  * - read data using spi octal quad mode
  * - check read buffer data whether correct
  */
-void test_spi_octal_read(void)
+ZTEST(test_spi, test_spi_octal_read)
 {
 	int ret;
 
@@ -656,17 +656,4 @@ void test_spi_octal_read(void)
 	zassert_true(ret == 0, "Spi release failure: error %d", ret);
 }
 
-void test_main(void)
-{
-	ztest_test_suite(test_spi,
-			ztest_user_unit_test(test_spi_device),
-			ztest_user_unit_test(test_spi_sector_erase),
-			ztest_user_unit_test(test_spi_single_write),
-			ztest_user_unit_test(test_spi_single_read),
-			ztest_user_unit_test(test_spi_dual_read),
-			ztest_user_unit_test(test_spi_quad_write),
-			ztest_user_unit_test(test_spi_quad_read),
-			ztest_user_unit_test(test_spi_octal_read)
-			);
-	ztest_run_test_suite(test_spi);
-}
+ZTEST_SUITE(test_spi, NULL, NULL, NULL, NULL, NULL);

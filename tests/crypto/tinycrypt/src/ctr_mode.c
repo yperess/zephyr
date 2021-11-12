@@ -49,7 +49,7 @@
 /*
  * NIST SP 800-38a CTR Test for encryption and decryption.
  */
-void test_ctr_sp_800_38a_encrypt_decrypt(void)
+ZTEST(test_tinycrypt, test_ctr_sp_800_38a_encrypt_decrypt)
 {
 	TC_START("Performing AES128-CTR mode tests:");
 

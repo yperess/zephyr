@@ -5,12 +5,5 @@
  */
 
 #include <ztest.h>
-extern void test_hmac_prng(void);
 
-/**test case main entry*/
-void test_main(void)
-{
-	ztest_test_suite(test_hmac_prng_fn,
-		ztest_unit_test(test_hmac_prng));
-	ztest_run_test_suite(test_hmac_prng_fn);
-}
+ZTEST_SUITE(test_hmac_prng_fn, NULL, NULL, NULL, NULL, NULL);

@@ -7544,7 +7544,7 @@ unsigned int test_120(void)
 }
 
 
-void test_hmac_prng(void)
+ZTEST(test_hmac_prng_fn, test_hmac_prng)
 {
 	unsigned int result = TC_PASS;
 

@@ -14,8 +14,7 @@
 #include <host/hci_core.h>
 
 #include "common.h"
-#include "test_cte_req_enable.h"
-#include "test_cte_set_rx_params.h"
+#include "bt_common.h"
 
 struct ut_bt_df_conn_cte_request_data {
 	uint8_t cte_request_interval;
@@ -81,7 +80,10 @@ int send_conn_cte_req_enable(uint16_t conn_handle,
 	return bt_hci_cmd_send_sync(BT_HCI_OP_LE_CONN_CTE_REQ_ENABLE, buf, NULL);
 }
 
-void test_set_conn_cte_req_enable_invalid_conn_handle(void)
+ZTEST_SUITE(test_cte_rx_params__invalid_conn, NULL, ut_bt_setup, NULL, NULL, NULL);
+
+ZTEST(test_cte_rx_params__invalid_conn,
+		test_set_conn_cte_req_enable_invalid_conn_handle)
 {
 	int err;
 
@@ -90,63 +92,7 @@ void test_set_conn_cte_req_enable_invalid_conn_handle(void)
 		      "Unexpected error value for CTE request enable with wrong conn handle");
 }
 
-void test_set_conn_cte_req_enable_before_set_rx_params(void)
-{
-	int err;
-
-	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
-	zassert_equal(err, -EIO,
-		      "Unexpected error value for CTE request enable before set rx params");
-}
-
-void test_set_conn_cte_req_enable_with_too_short_interval(void)
-{
-	int err;
-
-	g_data.cte_request_interval = REQUEST_INTERVAL_TOO_LOW;
-
-	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
-	zassert_equal(err, -EIO,
-		      "Unexpected error value for CTE request enable with too short request"
-		      " interval");
-}
-
-void test_set_conn_cte_req_enable_with_too_long_requested_length(void)
-{
-	int err;
-
-	g_data.requested_cte_length = REQUEST_CTE_LEN_TOO_LONG;
-
-	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
-	zassert_equal(err, -EIO,
-		      "Unexpected error value for CTE request enable with too long requested CTE"
-		      " length");
-}
-
-void test_set_conn_cte_req_enable_with_too_short_requested_length(void)
-{
-	int err;
-
-	g_data.requested_cte_length = REQUEST_CTE_LEN_TOO_SHORT;
-
-	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
-	zassert_equal(err, -EIO,
-		      "Unexpected error value for CTE request enable with too short requested CTE"
-		      " length");
-}
-
-void test_set_conn_cte_req_enable_with_invalid_cte_type(void)
-{
-	int err;
-
-	g_data.requested_cte_type = REQUEST_CTE_LEN_TOO_LONG;
-
-	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
-	zassert_equal(err, -EIO,
-		      "Unexpected error value for CTE request enable with invalid CTE type");
-}
-
-static void connection_setup(void)
+static void connection_setup(void *data)
 {
 	g_data.cte_request_interval = REQUEST_INTERVAL_OK;
 	g_data.requested_cte_length = BT_HCI_LE_CTE_LEN_MAX;
@@ -155,12 +101,25 @@ static void connection_setup(void)
 	g_conn_handle = common_create_connection();
 }
 
-static void connection_teardown(void)
+static void connection_teardown(void *data)
 {
 	common_destroy_connection(g_conn_handle);
 }
 
-static void cte_rx_param_setup(void)
+ZTEST_SUITE(test_cte_rx_params__param_setup, NULL, ut_bt_setup, connection_setup,
+	    connection_teardown, NULL);
+
+ZTEST(test_cte_rx_params__param_setup,
+		test_set_conn_cte_req_enable_before_set_rx_params)
+{
+	int err;
+
+	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
+	zassert_equal(err, -EIO,
+		      "Unexpected error value for CTE request enable before set rx params");
+}
+
+static void cte_rx_param_setup(void *data)
 {
 	/* Arbitrary antenna IDs. May be random for test purposes. */
 	static uint8_t ant_ids[] = { 0x1, 0x2, 0x3, 0x4, 0x5 };
@@ -172,37 +131,70 @@ static void cte_rx_param_setup(void)
 		.ant_ids = ant_ids
 	};
 
-	connection_setup();
+	connection_setup(NULL);
 	common_set_periph_latency(g_conn_handle, REQUEST_INTERVAL_TOO_LOW);
 
 	send_set_conn_cte_rx_params(g_conn_handle, &cte_rx_params, true);
 }
 
-static void cte_rx_param_teardown(void)
+static void cte_rx_param_teardown(void *data)
 {
-	connection_teardown();
-
+	connection_teardown(NULL);
 	send_set_conn_cte_rx_params(g_conn_handle, NULL, false);
 }
 
-void run_cte_request_enable_tests(void)
-{
-	ztest_test_suite(
-		test_hci_set_conn_cte_rx_params,
-		ztest_unit_test(test_set_conn_cte_req_enable_invalid_conn_handle),
-		ztest_unit_test_setup_teardown(test_set_conn_cte_req_enable_before_set_rx_params,
-					       connection_setup, connection_teardown),
-		ztest_unit_test_setup_teardown(test_set_conn_cte_req_enable_with_too_short_interval,
-					       cte_rx_param_setup, cte_rx_param_teardown),
-		ztest_unit_test_setup_teardown(
-			test_set_conn_cte_req_enable_with_too_short_requested_length,
-			cte_rx_param_setup, cte_rx_param_teardown),
-		ztest_unit_test_setup_teardown(
-			test_set_conn_cte_req_enable_with_too_long_requested_length,
-			cte_rx_param_setup, cte_rx_param_teardown));
-	ztest_run_test_suite(test_hci_set_conn_cte_rx_params);
+ZTEST_SUITE(test_cte_rx_params__req_enable, NULL, ut_bt_setup, cte_rx_param_setup,
+	    cte_rx_param_teardown, NULL);
 
-	/* TODO: Add tests cases that verify positive behavior of the function
-	 * HCI_LE_Connection_CTE_Request_Enable.
-	 */
+ZTEST(test_cte_rx_params__req_enable,
+		test_set_conn_cte_req_enable_with_too_short_interval)
+{
+	int err;
+
+	g_data.cte_request_interval = REQUEST_INTERVAL_TOO_LOW;
+
+	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
+	zassert_equal(err, -EIO,
+		      "Unexpected error value for CTE request enable with too short request"
+		      " interval");
+}
+
+
+
+ZTEST(test_cte_rx_params__req_enable,
+		test_set_conn_cte_req_enable_with_too_long_requested_length)
+{
+	int err;
+
+	g_data.requested_cte_length = REQUEST_CTE_LEN_TOO_LONG;
+
+	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
+	zassert_equal(err, -EIO,
+		      "Unexpected error value for CTE request enable with too long requested CTE"
+		      " length");
+}
+
+ZTEST(test_cte_rx_params__req_enable,
+		test_set_conn_cte_req_enable_with_too_short_requested_length)
+{
+	int err;
+
+	g_data.requested_cte_length = REQUEST_CTE_LEN_TOO_SHORT;
+
+	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
+	zassert_equal(err, -EIO,
+		      "Unexpected error value for CTE request enable with too short requested CTE"
+		      " length");
+}
+
+ZTEST(test_cte_rx_params__req_enable,
+		test_set_conn_cte_req_enable_with_invalid_cte_type)
+{
+	int err;
+
+	g_data.requested_cte_type = REQUEST_CTE_LEN_TOO_LONG;
+
+	err = send_conn_cte_req_enable(g_conn_handle, &g_data, true);
+	zassert_equal(err, -EIO,
+		      "Unexpected error value for CTE request enable with invalid CTE type");
 }

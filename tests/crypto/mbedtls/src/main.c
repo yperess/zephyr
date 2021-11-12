@@ -7,15 +7,12 @@
 #include <ztest.h>
 #include <app_memory/partitions.h>
 
-extern void test_mbedtls(void);
-
-/**test case main entry*/
-void test_main(void)
+static void * setup_mbedtls_partition(void)
 {
 #ifdef CONFIG_USERSPACE
 	k_mem_domain_add_partition(&k_mem_domain_default, &k_mbedtls_partition);
 #endif
-	ztest_test_suite(test_mbedtls_fn,
-		ztest_user_unit_test(test_mbedtls));
-	ztest_run_test_suite(test_mbedtls_fn);
+	return NULL;
 }
+
+ZTEST_SUITE(test_mbedtls_fn, setup_mbedtls_partition, NULL, NULL, NULL, NULL);

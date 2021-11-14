@@ -344,7 +344,7 @@ static void send_receive(const struct zcan_filter *filter1,
  * The driver stays in loopback mode after that.
  * The controller can now be tested against itself
  */
-static void test_set_loopback(void)
+ZTEST(canfd_driver_test, test_set_loopback)
 {
 	int ret;
 
@@ -357,7 +357,7 @@ static void test_set_loopback(void)
  * The massage should be received within a small timeout.
  * Standard identifier, classic frame
  */
-void test_send_receive_std(void)
+ZTEST(canfd_driver_test, test_send_receive_std)
 {
 	send_receive(&test_std_filter_1, &test_std_filter_2,
 		     &test_std_msg_1, &test_std_msg_2);
@@ -368,7 +368,7 @@ void test_send_receive_std(void)
  * The massage should be received within a small timeout.
  * Standard identifier, fd frame
  */
-void test_send_receive_fd(void)
+ZTEST(canfd_driver_test, test_send_receive_fd)
 {
 	send_receive(&test_std_filter_1, &test_std_filter_2,
 		     &test_std_msg_fd_1, &test_std_msg_fd_2);
@@ -379,13 +379,13 @@ void test_send_receive_fd(void)
  * The massage should be received within a small timeout.
  * Standard identifier, classic frame and fd
  */
-void test_send_receive_mix(void)
+ZTEST(canfd_driver_test, test_send_receive_mix)
 {
 	send_receive(&test_std_filter_1, &test_std_filter_2,
 		     &test_std_msg_fd_1, &test_std_msg_2);
 }
 
-void test_main(void)
+static void * canfd_driver_test_setup(void)
 {
 	k_sem_init(&rx_isr_sem, 0, 2);
 	k_sem_init(&rx_cb_sem, 0, INT_MAX);
@@ -393,10 +393,6 @@ void test_main(void)
 	can_dev = device_get_binding(CAN_DEVICE_NAME);
 	zassert_not_null(can_dev, "Device not found");
 
-	ztest_test_suite(canfd_driver,
-			 ztest_unit_test(test_set_loopback),
-			 ztest_unit_test(test_send_receive_std),
-			 ztest_unit_test(test_send_receive_fd),
-			 ztest_unit_test(test_send_receive_mix));
-	ztest_run_test_suite(canfd_driver);
+	return NULL;
 }
+ZTEST_SUITE(canfd_driver_test, NULL, canfd_driver_test_setup, NULL, NULL, NULL);

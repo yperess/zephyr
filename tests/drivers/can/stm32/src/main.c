@@ -119,7 +119,7 @@ static void send_test_msg(const struct device *can_dev,
  * the same time, remove and change the filters before the message.
  * This tests the internals filter handling of the driver itself.
  */
-static void test_filter_handling(void)
+ZTEST(can_driver_test, test_filter_handling)
 {
 	const struct device *can_dev;
 	int ret, filter_id_1, filter_id_2;
@@ -171,9 +171,4 @@ static void test_filter_handling(void)
 	can_detach(can_dev, filter_id_2);
 }
 
-void test_main(void)
-{
-	ztest_test_suite(can_driver,
-			 ztest_unit_test(test_filter_handling));
-	ztest_run_test_suite(can_driver);
-}
+ZTEST_SUITE(can_driver_test, NULL, NULL, NULL, NULL, NULL);

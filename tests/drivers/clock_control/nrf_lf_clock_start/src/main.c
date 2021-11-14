@@ -49,7 +49,7 @@ static void synth_check(bool on, nrf_clock_lfclk_t type)
 	}
 }
 
-void test_clock_check(void)
+ZTEST(test_nrf_clock_calibration, test_clock_check)
 {
 	bool xtal;
 
@@ -66,7 +66,7 @@ void test_clock_check(void)
 	}
 }
 
-void test_wait_in_thread(void)
+ZTEST(test_nrf_clock_calibration, test_wait_in_thread)
 {
 	nrf_clock_lfclk_t t;
 	bool o;
@@ -87,7 +87,7 @@ void test_wait_in_thread(void)
 	zassert_true((t == NRF_CLOCK_LFCLK_Xtal) && o, NULL);
 }
 
-void test_main(void)
+static void * test_nrf_lf_clock_start_setup(void)
 {
 	/* Do clock state read as early as possible. When RC is already running
 	 * and XTAL has been started then LFSRCSTAT register content might be
@@ -112,9 +112,7 @@ void test_main(void)
 		 IS_ENABLED(CONFIG_SYSTEM_CLOCK_WAIT_FOR_STABILITY) ?
 		 'y' : 'n');
 
-	ztest_test_suite(test_nrf_lf_clock_start,
-		ztest_unit_test(test_clock_check),
-		ztest_unit_test(test_wait_in_thread)
-			);
-	ztest_run_test_suite(test_nrf_lf_clock_start);
+	return NULL;
 }
+
+ZTEST_SUITE(test_nrf_lf_clock_start, NULL, test_nrf_lf_clock_start_setup, NULL, NULL, NULL);

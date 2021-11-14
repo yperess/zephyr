@@ -104,7 +104,7 @@ static void verify_sp(struct can_timing  *timing, uint16_t sp,
 /*
  * Verify the result of the algorithm
  */
-static void test_verify_algo(void)
+ZTEST(can_timing_test, test_verify_algo)
 {
 	struct can_timing  timing = {0};
 	int ret;
@@ -126,12 +126,11 @@ static void test_verify_algo(void)
 	}
 }
 
-void test_main(void)
+static void * can_timing_test_setup(void)
 {
 	can_dev = device_get_binding(CAN_DEVICE_NAME);
 	zassert_not_null(can_dev, "Device not found");
 
-	ztest_test_suite(can_timing,
-			 ztest_unit_test(test_verify_algo));
-	ztest_run_test_suite(can_timing);
+	return NULL;
 }
+ZTEST_SUITE(can_timing_test, NULL, can_timing_test_setup, NULL, NULl, NULL);

@@ -522,7 +522,7 @@ static void send_receive(const struct zcan_filter *filter1,
  * The driver stays in loopback mode after that.
  * The controller can now be tested against itself
  */
-static void test_set_loopback(void)
+ZTEST(can_driver_test, test_set_loopback)
 {
 	int ret;
 
@@ -534,7 +534,7 @@ static void test_set_loopback(void)
  * Sending a message to the wild should work because we are in loopback mode
  * and therfor ACK the frame ourselves
  */
-static void test_send_and_forget(void)
+ZTEST(can_driver_test, test_send_and_forget)
 {
 	zassert_not_null(can_dev, "Device not not found");
 
@@ -545,7 +545,7 @@ static void test_send_and_forget(void)
  * Test very basic filter attachment
  * Test each type but only one filter at a time
  */
-static void test_filter_attach(void)
+ZTEST(can_driver_test, test_filter_attach)
 {
 	int filter_id;
 
@@ -581,7 +581,7 @@ static void test_filter_attach(void)
 /*
  * Test if a message is received wile nothing was sent.
  */
-static void test_receive_timeout(void)
+ZTEST(can_driver_test, test_receive_timeout)
 {
 	int ret, filter_id;
 	struct zcan_frame msg;
@@ -597,7 +597,7 @@ static void test_receive_timeout(void)
 /*
  * Test if the callback function is called
  */
-static void test_send_callback(void)
+ZTEST(can_driver_test, test_send_callback)
 {
 	int ret;
 
@@ -614,7 +614,7 @@ static void test_send_callback(void)
  * The massage should be received within a small timeout.
  * Standard identifier
  */
-void test_send_receive_std(void)
+ZTEST(can_driver_test, test_send_receive_std)
 {
 	send_receive(&test_std_filter_1, &test_std_filter_2,
 		     &test_std_msg_1, &test_std_msg_2);
@@ -625,7 +625,7 @@ void test_send_receive_std(void)
  * The massage should be received within a small timeout
  * Extended identifier
  */
-void test_send_receive_ext(void)
+ZTEST(can_driver_test, test_send_receive_ext)
 {
 	send_receive(&test_ext_filter_1, &test_ext_filter_2,
 		     &test_ext_msg_1, &test_ext_msg_2);
@@ -638,7 +638,7 @@ void test_send_receive_ext(void)
  * because of the mask settind in the filter.
  * Standard identifier
  */
-void test_send_receive_std_masked(void)
+ZTEST(can_driver_test, test_send_receive_std_masked)
 {
 	send_receive(&test_std_masked_filter_1, &test_std_masked_filter_2,
 		     &test_std_msg_1, &test_std_msg_2);
@@ -651,7 +651,7 @@ void test_send_receive_std_masked(void)
  * because of the mask settind in the filter.
  * Extended identifier
  */
-void test_send_receive_ext_masked(void)
+ZTEST(can_driver_test, test_send_receive_ext_masked)
 {
 	send_receive(&test_ext_masked_filter_1, &test_ext_masked_filter_2,
 		     &test_ext_msg_1, &test_ext_msg_2);
@@ -662,7 +662,7 @@ void test_send_receive_ext_masked(void)
  * The massage should be received and buffered within a small timeout.
  * Extended identifier
  */
-void test_send_receive_buffer(void)
+ZTEST(can_driver_test, test_send_receive_buffer)
 {
 	int filter_id, i, ret;
 
@@ -696,7 +696,7 @@ void test_send_receive_buffer(void)
  * with a different id.
  * The massage should not be received.
  */
-static void test_send_receive_wrong_id(void)
+ZTEST(can_driver_test, test_send_receive_wrong_id)
 {
 	int ret, filter_id;
 	struct zcan_frame msg_buffer;
@@ -715,7 +715,7 @@ static void test_send_receive_wrong_id(void)
 /*
  * Check if a call with dlc > CAN_MAX_DLC returns CAN_TX_EINVAL
  */
-static void test_send_invalid_dlc(void)
+ZTEST(can_driver_test, test_send_invalid_dlc)
 {
 	struct zcan_frame frame;
 	int ret;
@@ -727,7 +727,7 @@ static void test_send_invalid_dlc(void)
 		      "ret [%d] not equal to %d", ret, CAN_TX_EINVAL);
 }
 
-void test_main(void)
+static void * can_driver_test_setup(void)
 {
 	k_sem_init(&rx_isr_sem, 0, 2);
 	k_sem_init(&rx_cb_sem, 0, INT_MAX);
@@ -735,18 +735,6 @@ void test_main(void)
 	can_dev = device_get_binding(CAN_DEVICE_NAME);
 	zassert_not_null(can_dev, "Device not found");
 
-	ztest_test_suite(can_driver,
-			 ztest_unit_test(test_set_loopback),
-			 ztest_unit_test(test_send_and_forget),
-			 ztest_unit_test(test_filter_attach),
-			 ztest_unit_test(test_receive_timeout),
-			 ztest_unit_test(test_send_callback),
-			 ztest_unit_test(test_send_receive_std),
-			 ztest_unit_test(test_send_invalid_dlc),
-			 ztest_unit_test(test_send_receive_ext),
-			 ztest_unit_test(test_send_receive_std_masked),
-			 ztest_unit_test(test_send_receive_ext_masked),
-			 ztest_unit_test(test_send_receive_buffer),
-			 ztest_unit_test(test_send_receive_wrong_id));
-	ztest_run_test_suite(can_driver);
+	return NULL;
 }
+ZTEST_SUITE(can_driver_test, NULL, can_driver_test_setup, NULL, NULL, NULL);

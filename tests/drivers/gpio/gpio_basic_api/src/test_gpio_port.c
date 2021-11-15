@@ -631,7 +631,7 @@ static int bits_logical(void)
 	return TC_PASS;
 }
 
-void test_gpio_port(void)
+ZTEST(gpio_basic_test, test_gpio_port)
 {
 	zassert_equal(setup(), TC_PASS,
 		      "device setup failed");

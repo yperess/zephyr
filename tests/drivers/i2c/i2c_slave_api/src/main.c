@@ -132,7 +132,7 @@ static int run_program_read(const struct device *i2c, uint8_t addr,
 	return 0;
 }
 
-void test_eeprom_slave(void)
+ZTEST(test_eeprom_slave, test_eeprom_slave)
 {
 	const char *label_0 = DT_LABEL(NODE_EP0);
 	const struct device *eeprom_0 = device_get_binding(label_0);
@@ -236,8 +236,4 @@ void test_eeprom_slave(void)
 	}
 }
 
-void test_main(void)
-{
-	ztest_test_suite(test_eeprom_slave, ztest_unit_test(test_eeprom_slave));
-	ztest_run_test_suite(test_eeprom_slave);
-}
+ZTEST_SUITE(test_eeprom_slave, NULL, NULL, NULL, NULL, NULL);

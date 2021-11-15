@@ -180,7 +180,7 @@ static int setup(const struct device *dev)
 BUILD_ASSERT(CONFIG_REGULATOR_FIXED_INIT_PRIORITY > 74);
 SYS_INIT(setup, POST_KERNEL, 74);
 
-static void test_preconditions(void)
+ZTEST(regulator_test, test_preconditions)
 {
 	zassert_equal(precheck, PC_OK,
 		      "precheck failed: %s",
@@ -190,7 +190,7 @@ static void test_preconditions(void)
 			  "no regulator device");
 }
 
-static void test_basic(void)
+ZTEST(regulator_test, test_basic)
 {
 	zassert_equal(precheck, PC_OK,
 		      "precheck failed: %s",
@@ -289,7 +289,7 @@ static void test_basic(void)
 		      "bad 2x on 2x off state: %d", rs);
 }
 
-void test_main(void)
+static void * regulator_test_setup(void)
 {
 	const char * const compats[] = DT_PROP(REGULATOR_NODE, compatible);
 	reg_dev = device_get_binding(DT_LABEL(REGULATOR_NODE));
@@ -301,8 +301,7 @@ void test_main(void)
 	TC_PRINT("startup-delay: %u us\n", STARTUP_DELAY_US);
 	TC_PRINT("off-on-delay: %u us\n", OFF_ON_DELAY_US);
 
-	ztest_test_suite(regulator_test,
-			 ztest_unit_test(test_preconditions),
-			 ztest_unit_test(test_basic));
-	ztest_run_test_suite(regulator_test);
+	return NULL;
 }
+
+ZTEST_SUITE(regulator_test, NULL, regulator_test_setup, NULL, NULL, NULL);

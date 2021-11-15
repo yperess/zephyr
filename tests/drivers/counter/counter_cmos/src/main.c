@@ -15,7 +15,7 @@
 #define MIN_BOUND 1	/* counter must report at least MIN_BOUND .. */
 #define MAX_BOUND 2	/* .. but at most MAX_BOUND seconds elapsed */
 
-void test_cmos_rate(void)
+ZTEST(test_cmos_counter, test_cmos_rate)
 {
 	const struct device *cmos;
 	uint32_t start, elapsed;
@@ -37,8 +37,4 @@ void test_cmos_rate(void)
 	zassert_true(elapsed <= MAX_BOUND, "busted maximum bound");
 }
 
-void test_main(void)
-{
-	ztest_test_suite(test_cmos_counter, ztest_unit_test(test_cmos_rate));
-	ztest_run_test_suite(test_cmos_counter);
-}
+ZTEST_SUITE(test_cmos_counter, NULL, NULL, NULL, NULL, NULL);

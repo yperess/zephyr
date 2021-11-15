@@ -33,92 +33,92 @@ void test_get_sensor_value_not_supp(int16_t channel)
 	zassert_true(sensor_sample_fetch_chan(dev, channel) == -ENOTSUP, "Invalid function");
 }
 
-void test_get_gauge_voltage(void)
+ZTEST(sbs_gauge_test, test_get_gauge_voltage)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_VOLTAGE);
 }
 
-void test_get_gauge_current(void)
+ZTEST(sbs_gauge_test, test_get_gauge_current)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_AVG_CURRENT);
 }
 
-void test_get_stdby_current(void)
+ZTEST(sbs_gauge_test, test_get_stdby_current)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_STDBY_CURRENT);
 }
 
-void test_get_max_load_current(void)
+ZTEST(sbs_gauge_test, test_get_max_load_current)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_MAX_LOAD_CURRENT);
 }
 
-void test_get_temperature(void)
+ZTEST(sbs_gauge_test, test_get_temperature)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_TEMP);
 }
 
-void test_get_soc(void)
+ZTEST(sbs_gauge_test, test_get_soc)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_STATE_OF_CHARGE);
 }
 
-void test_get_full_charge_capacity(void)
+ZTEST(sbs_gauge_test, test_get_full_charge_capacity)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_FULL_CHARGE_CAPACITY);
 }
 
-void test_get_rem_charge_capacity(void)
+ZTEST(sbs_gauge_test, test_get_rem_charge_capacity)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_REMAINING_CHARGE_CAPACITY);
 }
 
-void test_get_nom_avail_capacity(void)
+ZTEST(sbs_gauge_test, test_get_nom_avail_capacity)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_NOM_AVAIL_CAPACITY);
 }
 
-void test_get_full_avail_capacity(void)
+ZTEST(sbs_gauge_test, test_get_full_avail_capacity)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_FULL_AVAIL_CAPACITY);
 }
 
-void test_get_average_power(void)
+ZTEST(sbs_gauge_test, test_get_average_power)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_AVG_POWER);
 }
 
-void test_get_average_time_to_empty(void)
+ZTEST(sbs_gauge_test, test_get_average_time_to_empty)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_TIME_TO_EMPTY);
 }
 
-void test_get_average_time_to_full(void)
+ZTEST(sbs_gauge_test, test_get_average_time_to_full)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_TIME_TO_FULL);
 }
 
-void test_get_cycle_count(void)
+ZTEST(sbs_gauge_test, test_get_cycle_count)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_CYCLE_COUNT);
 }
 
-void test_get_design_voltage(void)
+ZTEST(sbs_gauge_test, test_get_design_voltage)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_DESIGN_VOLTAGE);
 }
 
-void test_get_desired_voltage(void)
+ZTEST(sbs_gauge_test, test_get_desired_voltage)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_DESIRED_VOLTAGE);
 }
 
-void test_get_desired_chg_current(void)
+ZTEST(sbs_gauge_test, test_get_desired_chg_current)
 {
 	test_get_sensor_value(SENSOR_CHAN_GAUGE_DESIRED_CHARGING_CURRENT);
 }
 
-void test_not_supported_channel(void)
+ZTEST(sbs_gauge_test, test_not_supported_channel)
 {
 	uint8_t channel;
 

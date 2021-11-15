@@ -68,7 +68,7 @@ const struct device *get_led_controller(void)
 	return device_get_binding(LED_CTRL_DEV_NAME);
 }
 
-void test_led_setup(void)
+ZTEST_USER(led_user_test, test_led_setup)
 {
 	led_ctrl = get_led_controller();
 	zassert_not_null(led_ctrl,
@@ -79,7 +79,7 @@ void test_led_setup(void)
 			  LED_CTRL_DEV_NAME);
 }
 
-void test_led_get_info(void)
+ZTEST_USER(led_user_test, test_led_get_info)
 {
 	uint8_t led;
 	int ret;
@@ -133,7 +133,7 @@ void test_led_get_info(void)
 	}
 }
 
-void test_led_on(void)
+ZTEST_USER(led_user_test, test_led_on)
 {
 	uint8_t led;
 	int ret;
@@ -147,7 +147,7 @@ void test_led_on(void)
 	}
 }
 
-void test_led_off(void)
+ZTEST_USER(led_user_test, test_led_off)
 {
 	uint8_t led;
 	int ret;
@@ -161,7 +161,7 @@ void test_led_off(void)
 	}
 }
 
-void test_led_set_color(void)
+ZTEST_USER(led_user_test, test_led_set_color)
 {
 	uint8_t led;
 	uint8_t colors[TEST_MAX_COLORS + 1];
@@ -221,7 +221,7 @@ void test_led_set_color(void)
 	}
 }
 
-void test_led_set_brightness(void)
+ZTEST_USER(led_user_test, test_led_set_brightness)
 {
 	uint8_t led;
 	int ret;

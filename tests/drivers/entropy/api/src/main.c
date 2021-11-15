@@ -98,14 +98,9 @@ static int get_entropy(void)
 	return ret;
 }
 
-static void test_entropy_get_entropy(void)
+ZTEST(test_entropy_api, test_entropy_get_entropy)
 {
 	zassert_true(get_entropy() == TC_PASS, NULL);
 }
 
-void test_main(void)
-{
-	ztest_test_suite(entropy_api,
-			 ztest_unit_test(test_entropy_get_entropy));
-	ztest_run_test_suite(entropy_api);
-}
+ZTEST_SUITE(test_entropy_api, NULL, NULL, NULL, NULL, NULL);

@@ -26,7 +26,7 @@ ISR_DIRECT_DECLARE(timer0_isr_wrapper)
 	return 0;
 }
 
-static void init_zli_timer0(void)
+static void * init_zli_timer0(void)
 {
 	nrf_timer_mode_set(NRF_TIMER0, NRF_TIMER_MODE_TIMER);
 	nrf_timer_bit_width_set(NRF_TIMER0, NRF_TIMER_BIT_WIDTH_32);
@@ -41,6 +41,8 @@ static void init_zli_timer0(void)
 			   IS_ENABLED(CONFIG_ZERO_LATENCY_IRQS) ?
 			   IRQ_ZERO_LATENCY : 0);
 	irq_enable(TIMER0_IRQn);
+
+	return NULL;
 }
 
 static void start_zli_timer0(void)
@@ -90,7 +92,7 @@ static void test_timeout(int32_t chan, k_timeout_t t, bool ext_window)
 }
 
 
-static void test_basic(void)
+ZTEST(test_nrf_rtc_timer, test_basic)
 {
 	int32_t chan = z_nrf_rtc_timer_chan_alloc();
 
@@ -119,7 +121,7 @@ static void test_basic(void)
 	z_nrf_rtc_timer_chan_free(chan);
 }
 
-static void test_z_nrf_rtc_timer_compare_evt_address_get(void)
+ZTEST(test_nrf_rtc_timer, test_z_nrf_rtc_timer_compare_evt_address_get)
 {
 	uint32_t evt_addr;
 
@@ -128,7 +130,7 @@ static void test_z_nrf_rtc_timer_compare_evt_address_get(void)
 			"Unexpected event addr:%x", evt_addr);
 }
 
-static void test_int_disable_enabled(void)
+ZTEST(test_nrf_rtc_timer, test_int_disable_enabled)
 {
 	uint32_t now = z_nrf_rtc_timer_read();
 	uint32_t t = 1000;
@@ -160,7 +162,7 @@ static void test_int_disable_enabled(void)
 	z_nrf_rtc_timer_chan_free(chan);
 }
 
-static void test_get_ticks(void)
+ZTEST(test_nrf_rtc_timer, test_get_ticks)
 {
 	k_timeout_t t = K_MSEC(1);
 	uint32_t exp_ticks = z_nrf_rtc_timer_read() + t.ticks;
@@ -202,7 +204,7 @@ static void sched_handler(int32_t id, uint32_t cc_val, void *user_data)
 	*evt_uptime_us = k_ticks_to_us_floor64(now - (rtc_ticks_now - cc_val));
 }
 
-static void test_absolute_scheduling(void)
+ZTEST(test_nrf_rtc_timer, test_absolute_scheduling)
 {
 	k_timeout_t t;
 	int64_t now_us = k_ticks_to_us_floor64(sys_clock_tick_get());
@@ -244,7 +246,7 @@ static void test_absolute_scheduling(void)
 	z_nrf_rtc_timer_chan_free(chan);
 }
 
-static void test_alloc_free(void)
+ZTEST(test_nrf_rtc_timer, test_alloc_free)
 {
 	int32_t chan[CONFIG_NRF_RTC_TIMER_USER_CHAN_COUNT];
 	int32_t inv_ch;
@@ -262,7 +264,7 @@ static void test_alloc_free(void)
 	}
 }
 
-static void test_stress(void)
+ZTEST(test_nrf_rtc_timer, test_stress)
 {
 	int x = 0;
 	uint32_t start = k_uptime_get_32();
@@ -289,7 +291,7 @@ static void test_stress(void)
 	z_nrf_rtc_timer_chan_free(chan);
 }
 
-static void test_reseting_cc(void)
+ZTEST(test_nrf_rtc_timer, test_reseting_cc)
 {
 	uint32_t start = k_uptime_get_32();
 	uint32_t test_time = 1000;
@@ -334,19 +336,5 @@ static void test_reseting_cc(void)
 	z_nrf_rtc_timer_chan_free(chan);
 }
 
-void test_main(void)
-{
-	init_zli_timer0();
 
-	ztest_test_suite(test_nrf_rtc_timer,
-		ztest_unit_test(test_basic),
-		ztest_unit_test(test_z_nrf_rtc_timer_compare_evt_address_get),
-		ztest_unit_test(test_int_disable_enabled),
-		ztest_unit_test(test_get_ticks),
-		ztest_unit_test(test_absolute_scheduling),
-		ztest_unit_test(test_alloc_free),
-		ztest_unit_test(test_stress),
-		ztest_unit_test(test_reseting_cc)
-			 );
-	ztest_run_test_suite(test_nrf_rtc_timer);
-}
+ZTEST_SUITE(test_nrf_rtc_timer, NULL, init_zli_timer0, NULL, NULL, NULL);

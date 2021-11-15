@@ -26,7 +26,7 @@ static enum sensor_channel channel[] = {
 	SENSOR_CHAN_GYRO_Z,
 };
 
-void test_sensor_accel_basic(void)
+ZTEST(accel_tests, test_sensor_accel_basic)
 {
 	const struct device *dev;
 
@@ -46,8 +46,8 @@ void test_sensor_accel_basic(void)
 	}
 }
 
-/* Run all of our tests on an accelerometer device with the given label */
-static void run_tests_on_accel(const char *label)
+/* Configure tests on an accelerometer device with the given label */
+static void configure_tests_for_accel(const char *label)
 {
 	const struct device *accel = device_get_binding(label);
 
@@ -55,17 +55,28 @@ static void run_tests_on_accel(const char *label)
 	zassert_not_null(accel, "Unable to get Accelerometer device");
 	k_object_access_grant(accel, k_current_get());
 	accel_label = label;
-	ztest_test_suite(test_sensor_accel,
-			 ztest_user_unit_test(test_sensor_accel_basic));
-	ztest_run_test_suite(test_sensor_accel);
 }
 
-/* test case main entry */
-void test_main(void)
+ZTEST_USER(accel0_tests, test_sensor_accel)
 {
-	run_tests_on_accel(DT_LABEL(DT_ALIAS(accel_0)));
+	test_sensor_accel_basic();
+}
+
+static bool only_true_predicate(void * state)
+{
+	return true;
+}
+
+ZTEST_SUITE(accel_tests, only_true_predicate, NULL, NULL, NULL, NULL);
+
+/* Neccessary to rerun tests with different config */
+void accel_tests_main(void)
+{
+	configure_tests_for_accel(DT_LABEL(DT_ALIAS(accel_0)));
+	ztest_run_test_suite(accel_tests);
 
 #if DT_NODE_EXISTS(DT_ALIAS(accel_1))
-	run_tests_on_accel(DT_LABEL(DT_ALIAS(accel_1)));
-#endif
+	configure_tests_for_accel(DT_LABEL(DT_ALIAS(accel_1)));
+	ztest_run_test_suite(accel_tests);
+#endif /* DT_NODE_EXISTS(DT_ALIAS(accel_1)) */
 }

@@ -579,7 +579,7 @@ static int spi_resource_lock_test(const struct device *lock_dev,
 	return 0;
 }
 
-void test_spi_loopback(void)
+ZTEST(test_spi, test_spi_loopback)
 {
 #if (CONFIG_SPI_ASYNC)
 	struct k_thread async_thread;
@@ -657,9 +657,4 @@ end:
 #endif
 }
 
-/*test case main entry*/
-void test_main(void)
-{
-	ztest_test_suite(test_spi, ztest_unit_test(test_spi_loopback));
-	ztest_run_test_suite(test_spi);
-}
+ZTEST_SUITE(test_spi, NULL, NULL, NULL, NULL, NULL);

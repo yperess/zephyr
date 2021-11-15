@@ -232,7 +232,7 @@ static int test_task_loopback(void)
 	return TC_PASS;
 }
 
-void test_dac_loopback(void)
+ZTEST(dac_loopback_test, test_dac_loopback)
 {
 	zassert_true(test_task_loopback() == TC_PASS, NULL);
 }

@@ -203,25 +203,25 @@ void test_gpio_pin_interrupt_level(unsigned int cfg_flags,
 }
 
 /** @brief Verify GPIO_INT_EDGE_RISING flag. */
-void test_gpio_int_edge_rising(void)
+ZTEST(gpio_api_1pin_test, test_gpio_int_edge_rising)
 {
 	test_gpio_pin_interrupt_edge(0, GPIO_INT_EDGE_RISING);
 }
 
 /** @brief Verify GPIO_INT_EDGE_FALLING flag. */
-void test_gpio_int_edge_falling(void)
+ZTEST(gpio_api_1pin_test, test_gpio_int_edge_falling)
 {
 	test_gpio_pin_interrupt_edge(0, GPIO_INT_EDGE_FALLING);
 }
 
 /** @brief Verify GPIO_INT_EDGE_BOTH flag. */
-void test_gpio_int_edge_both(void)
+ZTEST(gpio_api_1pin_test, test_gpio_int_edge_both)
 {
 	test_gpio_pin_interrupt_edge(0, GPIO_INT_EDGE_BOTH);
 }
 
 /** @brief Verify GPIO_INT_EDGE_TO_ACTIVE flag. */
-void test_gpio_int_edge_to_active(void)
+ZTEST(gpio_api_1pin_test, test_gpio_int_edge_to_active)
 {
 	TC_PRINT("Step 1: Configure pin as active high\n");
 	test_gpio_pin_interrupt_edge(GPIO_ACTIVE_HIGH, GPIO_INT_EDGE_TO_ACTIVE);
@@ -230,7 +230,7 @@ void test_gpio_int_edge_to_active(void)
 }
 
 /** @brief Verify GPIO_INT_EDGE_TO_INACTIVE flag. */
-void test_gpio_int_edge_to_inactive(void)
+ZTEST(gpio_api_1pin_test, test_gpio_int_edge_to_inactive)
 {
 	TC_PRINT("Step 1: Configure pin as active high\n");
 	test_gpio_pin_interrupt_edge(GPIO_ACTIVE_HIGH, GPIO_INT_EDGE_TO_INACTIVE);
@@ -239,19 +239,19 @@ void test_gpio_int_edge_to_inactive(void)
 }
 
 /** @brief Verify GPIO_INT_LEVEL_HIGH flag. */
-void test_gpio_int_level_high(void)
+ZTEST(gpio_api_1pin_test, test_gpio_int_level_high)
 {
 	test_gpio_pin_interrupt_level(0, GPIO_INT_LEVEL_HIGH);
 }
 
 /** @brief Verify GPIO_INT_LEVEL_LOW flag. */
-void test_gpio_int_level_low(void)
+ZTEST(gpio_api_1pin_test, test_gpio_int_level_low)
 {
 	test_gpio_pin_interrupt_level(0, GPIO_INT_LEVEL_LOW);
 }
 
 /** @brief Verify GPIO_INT_LEVEL_ACTIVE flag. */
-void test_gpio_int_level_active(void)
+ZTEST(gpio_api_1pin_test, test_gpio_int_level_active)
 {
 	TC_PRINT("Step 1: Configure pin as active high\n");
 	test_gpio_pin_interrupt_level(GPIO_ACTIVE_HIGH, GPIO_INT_LEVEL_ACTIVE);
@@ -260,7 +260,7 @@ void test_gpio_int_level_active(void)
 }
 
 /** @brief Verify GPIO_INT_LEVEL_INACTIVE flag. */
-void test_gpio_int_level_inactive(void)
+ZTEST(gpio_api_1pin_test, test_gpio_int_level_inactive)
 {
 	TC_PRINT("Step 1: Configure pin as active high\n");
 	test_gpio_pin_interrupt_level(GPIO_ACTIVE_HIGH, GPIO_INT_LEVEL_INACTIVE);

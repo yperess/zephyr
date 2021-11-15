@@ -45,7 +45,7 @@ static void pin_set_raw_and_verify(const struct device *port,
  * - Verify that it is not possible to change value of a pin via
  *   gpio_pin_set_raw function if pin is configured as an input.
  */
-void test_gpio_pin_configure_push_pull(void)
+ZTEST(gpio_api_1pin_test, test_gpio_pin_configure_push_pull)
 {
 	const struct device *port;
 	int ret;
@@ -159,7 +159,7 @@ void test_gpio_pin_configure_push_pull(void)
  *   configured as input is low. Drivers that do not support Open
  *   Drain flag return ENOTSUP.
  */
-void test_gpio_pin_configure_single_ended(void)
+ZTEST(gpio_api_1pin_test, test_gpio_pin_configure_single_ended)
 {
 	const struct device *port;
 	int pin_in_val;

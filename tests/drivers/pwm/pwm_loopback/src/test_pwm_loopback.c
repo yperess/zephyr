@@ -110,7 +110,7 @@ void test_capture(uint32_t period, uint32_t pulse, enum test_pwm_unit unit,
 	}
 }
 
-void test_pulse_capture(void)
+ZTEST(pwm_loopback_test, test_pulse_capture)
 {
 	test_capture(TEST_PWM_PERIOD_NSEC, TEST_PWM_PULSE_NSEC,
 		     TEST_PWM_UNIT_NSEC,
@@ -120,7 +120,7 @@ void test_pulse_capture(void)
 		     PWM_CAPTURE_TYPE_PULSE | PWM_POLARITY_NORMAL);
 }
 
-void test_pulse_capture_inverted(void)
+ZTEST(pwm_loopback_test, test_pulse_capture_inverted)
 {
 	test_capture(TEST_PWM_PERIOD_NSEC, TEST_PWM_PULSE_NSEC,
 		     TEST_PWM_UNIT_NSEC,
@@ -130,7 +130,7 @@ void test_pulse_capture_inverted(void)
 		     PWM_CAPTURE_TYPE_PULSE | PWM_POLARITY_INVERTED);
 }
 
-void test_period_capture(void)
+ZTEST(pwm_loopback_test, test_period_capture)
 {
 	test_capture(TEST_PWM_PERIOD_NSEC, TEST_PWM_PULSE_NSEC,
 		     TEST_PWM_UNIT_NSEC,
@@ -140,7 +140,7 @@ void test_period_capture(void)
 		     PWM_CAPTURE_TYPE_PERIOD | PWM_POLARITY_NORMAL);
 }
 
-void test_period_capture_inverted(void)
+ZTEST(pwm_loopback_test, test_period_capture_inverted)
 {
 	test_capture(TEST_PWM_PERIOD_NSEC, TEST_PWM_PULSE_NSEC,
 		     TEST_PWM_UNIT_NSEC,
@@ -150,7 +150,7 @@ void test_period_capture_inverted(void)
 		     PWM_CAPTURE_TYPE_PERIOD | PWM_POLARITY_INVERTED);
 }
 
-void test_pulse_and_period_capture(void)
+ZTEST(pwm_loopback_test, test_pulse_and_period_capture)
 {
 	test_capture(TEST_PWM_PERIOD_NSEC, TEST_PWM_PULSE_NSEC,
 		     TEST_PWM_UNIT_NSEC,
@@ -160,7 +160,7 @@ void test_pulse_and_period_capture(void)
 		     PWM_CAPTURE_TYPE_BOTH | PWM_POLARITY_NORMAL);
 }
 
-void test_capture_timeout(void)
+ZTEST(pwm_loopback_test, test_capture_timeout)
 {
 	struct test_pwm in;
 	struct test_pwm out;
@@ -220,7 +220,7 @@ static void continuous_capture_callback(const struct device *dev,
 	}
 }
 
-void test_continuous_capture(void)
+ZTEST(pwm_loopback_test, test_continuous_capture)
 {
 	static const uint32_t period_usec = 10000;
 	static const uint32_t pulse_usec = 7500;
@@ -290,7 +290,7 @@ void test_continuous_capture(void)
 	}
 }
 
-void test_capture_busy(void)
+ZTEST(pwm_loopback_test, test_capture_busy)
 {
 	struct test_pwm in;
 	struct test_pwm out;

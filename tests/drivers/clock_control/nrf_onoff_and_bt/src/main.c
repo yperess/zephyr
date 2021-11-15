@@ -23,17 +23,14 @@ static bool test_end;
 static struct onoff_manager *hf_mgr;
 static uint32_t iteration;
 
-static void setup(void)
+static void * test_nrf_onoff_and_bt_setup(void * data)
 {
 	hf_mgr = z_nrf_clock_control_get_onoff(CLOCK_CONTROL_NRF_SUBSYS_HF);
 	zassert_true(hf_mgr, NULL);
 
 	iteration = 0;
-}
 
-static void teardown(void)
-{
-	/* empty */
+	return NULL;
 }
 
 static void bt_timeout_handler(struct k_timer *timer)
@@ -97,7 +94,7 @@ static void check_hf_status(const struct device *dev, bool exp_on,
  * Test runs in the loop to eventually lead to cases when clock controlling is
  * preempted by timeout handler. At certain points clock status is validated.
  */
-static void test_onoff_interrupted(void)
+ZTEST(test_nrf_onoff_and_bt, test_onoff_interrupted)
 {
 	const struct device *clock_dev =
 		device_get_binding(DT_LABEL(DT_INST(0, nordic_nrf_clock)));
@@ -192,7 +189,7 @@ K_TIMER_DEFINE(timer2, onoff_timeout_handler, NULL);
  * Test runs in the loop to eventually lead to cases when clock controlling is
  * preempted by timeout handler. At certain points clock status is validated.
  */
-static void test_bt_interrupted(void)
+ZTEST(test_nrf_onoff_and_bt, test_bt_interrupted)
 {
 	const struct device *clock_dev =
 		device_get_binding(DT_LABEL(DT_INST(0, nordic_nrf_clock)));
@@ -240,13 +237,5 @@ static void test_bt_interrupted(void)
 	check_hf_status(clock_dev, false, true);
 }
 
-void test_main(void)
-{
-	ztest_test_suite(test_nrf_onoff_and_bt,
-		ztest_unit_test_setup_teardown(test_onoff_interrupted,
-					       setup, teardown),
-		ztest_unit_test_setup_teardown(test_bt_interrupted,
-					       setup, teardown)
-			);
-	ztest_run_test_suite(test_nrf_onoff_and_bt);
-}
+ZTEST_SUITE(test_nrf_onoff_and_bt, NULL, NULL, test_nrf_onoff_and_bt_setup,
+	    NULL, NULL);

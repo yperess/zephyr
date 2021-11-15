@@ -157,7 +157,7 @@ void test_set_top_value_with_alarm_instance(const char *dev_name)
 		     dev_name, top_cnt);
 }
 
-void test_set_top_value_with_alarm(void)
+ZTEST(test_maxim_counter, test_set_top_value_with_alarm)
 {
 	test_all_instances(test_set_top_value_with_alarm_instance,
 			   set_top_value_capable);
@@ -202,7 +202,7 @@ void test_set_top_value_without_alarm_instance(const char *dev_name)
 		     dev_name);
 }
 
-void test_set_top_value_without_alarm(void)
+ZTEST(test_maxim_counter, test_set_top_value_without_alarm)
 {
 	test_all_instances(test_set_top_value_without_alarm_instance,
 			   set_top_value_capable);
@@ -345,13 +345,13 @@ static bool single_channel_alarm_and_custom_top_capable(const char *dev_name)
 	       set_top_value_capable(dev_name);
 }
 
-void test_single_shot_alarm_notop(void)
+ZTEST(test_maxim_counter, test_single_shot_alarm_notop)
 {
 	test_all_instances(test_single_shot_alarm_notop_instance,
 			   single_channel_alarm_capable);
 }
 
-void test_single_shot_alarm_top(void)
+ZTEST(test_maxim_counter, test_single_shot_alarm_top)
 {
 	test_all_instances(test_single_shot_alarm_top_instance,
 			   single_channel_alarm_and_custom_top_capable);
@@ -455,7 +455,7 @@ static bool not_capable(const char *dev_name)
 	return false;
 }
 
-void test_multiple_alarms(void)
+ZTEST(test_maxim_counter, test_multiple_alarms)
 {
 	/* Test not supported on DS3231 because second alarm resolution is
 	 * more coarse than first alarm; code would have to be changed to
@@ -528,7 +528,7 @@ void test_all_channels_instance(const char *dev_name)
 	}
 }
 
-void test_all_channels(void)
+ZTEST(test_maxim_counter, test_all_channels)
 {
 	test_all_instances(test_all_channels_instance,
 			   single_channel_alarm_capable);
@@ -642,12 +642,12 @@ static bool late_detection_capable(const char *dev_name)
 	return true;
 }
 
-void test_late_alarm(void)
+ZTEST(test_maxim_counter, test_late_alarm)
 {
 	test_all_instances(test_late_alarm_instance, late_detection_capable);
 }
 
-void test_late_alarm_error(void)
+ZTEST(test_maxim_counter, test_late_alarm_error)
 {
 	test_all_instances(test_late_alarm_error_instance,
 			   late_detection_capable);
@@ -735,7 +735,7 @@ end:
 	return ret;
 }
 
-static void test_short_relative_alarm(void)
+ZTEST(test_maxim_counter, test_short_relative_alarm)
 {
 	test_all_instances(test_short_relative_alarm_instance,
 			   short_relative_capable);
@@ -848,13 +848,13 @@ static bool reliable_cancel_capable(const char *dev_name)
 	return false;
 }
 
-void test_cancelled_alarm_does_not_expire(void)
+ZTEST(test_maxim_counter, test_cancelled_alarm_does_not_expire)
 {
 	test_all_instances(test_cancelled_alarm_does_not_expire_instance,
 			   reliable_cancel_capable);
 }
 
-static void test_ds3231_synchronize(void)
+ZTEST(test_maxim_counter, test_ds3231_synchronize)
 {
 	const char *dev_name = devices[0];
 	const struct device *dev = device_get_binding(dev_name);
@@ -883,7 +883,7 @@ static void test_ds3231_synchronize(void)
 		     "%s: Sync operation failed: %d", dev_name, res);
 }
 
-static void test_ds3231_get_syncpoint(void)
+ZTEST_USER(test_maxim_counter, test_ds3231_get_syncpoint)
 {
 	const char *dev_name = devices[0];
 	const struct device *dev = device_get_binding(dev_name);
@@ -900,7 +900,7 @@ static void test_ds3231_get_syncpoint(void)
 		 syncpoint.syncclock);
 }
 
-static void test_ds3231_req_syncpoint(void)
+ZTEST(test_maxim_counter, test_ds3231_req_syncpoint)
 {
 	const char *dev_name = devices[0];
 	const struct device *dev = device_get_binding(dev_name);
@@ -922,7 +922,7 @@ static void test_ds3231_req_syncpoint(void)
 		     "%s: Syncpoint operation failed: %d\n", dev_name, rc);
 }
 
-void test_main(void)
+static void * test_maxim_counter_setup(void)
 {
 	const struct device *dev;
 	int i;
@@ -949,27 +949,8 @@ void test_main(void)
 		k_object_access_grant(dev, k_current_get());
 	}
 
-	ztest_test_suite(test_counter,
-			 /* Uses callbacks, run in supervisor mode */
-			 ztest_unit_test(test_set_top_value_with_alarm),
-			 ztest_unit_test(test_single_shot_alarm_notop),
-			 ztest_unit_test(test_single_shot_alarm_top),
-			 ztest_unit_test(test_multiple_alarms),
-			 ztest_unit_test(test_late_alarm),
-			 ztest_unit_test(test_late_alarm_error),
-			 ztest_unit_test(test_short_relative_alarm),
-			 ztest_unit_test(test_cancelled_alarm_does_not_expire),
-
-			 /* Supervisor-mode driver-specific API */
-			 ztest_unit_test(test_ds3231_synchronize),
-			 ztest_unit_test(test_ds3231_get_syncpoint),
-
-			 /* User-mode-compatible driver-specific API*/
-			 ztest_unit_test(test_ds3231_req_syncpoint),
-			 ztest_user_unit_test(test_ds3231_get_syncpoint),
-
-			 /* Supervisor-mode test, takes 63 s so do it last */
-			 ztest_unit_test(test_all_channels)
-			 );
-	ztest_run_test_suite(test_counter);
+	return NULL;
 }
+
+ZTEST_SUITE(test_maxim_counter, NULL, test_maxim_counter_setup, NULL, NULL,
+	    NULL);

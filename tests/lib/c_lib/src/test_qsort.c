@@ -16,7 +16,14 @@ static int compare_ints(const void *a, const void *b)
 	return (aa > bb) - (aa < bb);
 }
 
-void test_qsort(void)
+ZTEST_SUITE(tets_c_lib_qsort, NULL, NULL, NULL, NULL, NULL);
+
+/**
+ *
+ * @brief Test qsort function
+ *
+ */
+ZTEST(tets_c_lib_qsort, test_qsort)
 {
 	{
 		int actual_int[] = { 1, 3, 2 };

@@ -43,7 +43,7 @@ static const struct device *flash_dev;
 static struct flash_pages_info page_info;
 static uint8_t __aligned(4) expected[EXPECTED_SIZE];
 
-static void test_setup(void)
+ZTEST(flash_driver_test, test_setup)
 {
 	int rc;
 
@@ -90,7 +90,7 @@ static void test_setup(void)
 
 }
 
-static void test_read_unaligned_address(void)
+ZTEST(flash_driver_test, test_read_unaligned_address)
 {
 	int rc;
 	uint8_t buf[EXPECTED_SIZE];
@@ -131,12 +131,4 @@ static void test_read_unaligned_address(void)
 	}
 }
 
-void test_main(void)
-{
-	ztest_test_suite(flash_driver_test,
-		ztest_unit_test(test_setup),
-		ztest_unit_test(test_read_unaligned_address)
-	);
-
-	ztest_run_test_suite(flash_driver_test);
-}
+ZTEST_SUITE(flash_driver_test, NULL, NULL, NULL, NULL, NULL);

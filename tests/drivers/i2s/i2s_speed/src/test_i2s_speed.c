@@ -163,7 +163,7 @@ static int configure_stream(const struct device *dev_i2s, enum i2s_dir dir)
 }
 
 /** Configure I2S TX transfer. */
-void test_i2s_tx_transfer_configure(void)
+ZTEST(i2s_speed_test, test_i2s_tx_transfer_configure)
 {
 	int ret;
 
@@ -175,7 +175,7 @@ void test_i2s_tx_transfer_configure(void)
 }
 
 /** Configure I2S RX transfer. */
-void test_i2s_rx_transfer_configure(void)
+ZTEST(i2s_speed_test, test_i2s_rx_transfer_configure)
 {
 	int ret;
 
@@ -194,7 +194,7 @@ void test_i2s_rx_transfer_configure(void)
  * - TX stream DRAIN trigger empties the transmit queue.
  * - RX stream STOP trigger stops reception.
  */
-void test_i2s_transfer_short(void)
+ZTEST(i2s_speed_test, test_i2s_transfer_short)
 {
 	if (IS_ENABLED(CONFIG_I2S_TEST_USE_I2S_DIR_BOTH)) {
 		TC_PRINT("RX/TX transfer requires use of I2S_DIR_BOTH.\n");
@@ -272,7 +272,7 @@ void test_i2s_transfer_short(void)
  * - TX stream DRAIN trigger empties the transmit queue.
  * - RX stream STOP trigger stops reception.
  */
-void test_i2s_transfer_long(void)
+ZTEST(i2s_speed_test, test_i2s_transfer_long)
 {
 	if (IS_ENABLED(CONFIG_I2S_TEST_USE_I2S_DIR_BOTH)) {
 		TC_PRINT("RX/TX transfer requires use of I2S_DIR_BOTH.\n");
@@ -355,7 +355,7 @@ void test_i2s_transfer_long(void)
 	zassert_equal(num_verified, NUM_BLOCKS, "Invalid RX blocks received");
 }
 
-void test_i2s_dir_both_transfer_configure(void)
+ZTEST(i2s_speed_test, test_i2s_dir_both_transfer_configure)
 {
 	int ret;
 
@@ -384,7 +384,7 @@ void test_i2s_dir_both_transfer_configure(void)
  * - Sending / receiving a short sequence of data returns success.
  * - DRAIN trigger empties the transmit queue and stops both streams.
  */
-void test_i2s_dir_both_transfer_short(void)
+ZTEST(i2s_speed_test, test_i2s_dir_both_transfer_short)
 {
 	if (!dir_both_supported) {
 		TC_PRINT("I2S_DIR_BOTH value is not supported.\n");
@@ -451,7 +451,7 @@ void test_i2s_dir_both_transfer_short(void)
  * - Sending / receiving a long sequence of data returns success.
  * - DRAIN trigger empties the transmit queue and stops both streams.
  */
-void test_i2s_dir_both_transfer_long(void)
+ZTEST(i2s_speed_test, test_i2s_dir_both_transfer_long)
 {
 	if (!dir_both_supported) {
 		TC_PRINT("I2S_DIR_BOTH value is not supported.\n");

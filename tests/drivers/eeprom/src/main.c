@@ -14,7 +14,7 @@
 ZTEST_BMEM static const char *eeprom_label;
 
 /* Test retrieval of eeprom size */
-static void test_size(void)
+ZTEST(test_eeprom_suite, test_size)
 {
 	const struct device *eeprom;
 	size_t size;
@@ -26,7 +26,7 @@ static void test_size(void)
 }
 
 /* Test write outside eeprom area */
-static void test_out_of_bounds(void)
+ZTEST(test_eeprom_suite, test_out_of_bounds)
 {
 	const uint8_t data[4] = { 0x01, 0x02, 0x03, 0x03 };
 	const struct device *eeprom;
@@ -41,7 +41,7 @@ static void test_out_of_bounds(void)
 }
 
 /* Test write and rewrite */
-static void test_write_rewrite(void)
+ZTEST(test_eeprom_suite, test_write_rewrite)
 {
 	const uint8_t wr_buf1[4] = { 0xFF, 0xEE, 0xDD, 0xCC };
 	const uint8_t wr_buf2[sizeof(wr_buf1)] = { 0xAA, 0xBB, 0xCC, 0xDD };
@@ -84,7 +84,7 @@ static void test_write_rewrite(void)
 }
 
 /* Test write at fixed address */
-static void test_write_at_fixed_address(void)
+ZTEST(test_eeprom_suite, test_write_at_fixed_address)
 {
 	const uint8_t wr_buf1[4] = { 0xFF, 0xEE, 0xDD, 0xCC };
 	uint8_t rd_buf[sizeof(wr_buf1)];
@@ -109,7 +109,7 @@ static void test_write_at_fixed_address(void)
 }
 
 /* Test write one byte at a time */
-static void test_write_byte(void)
+ZTEST(test_eeprom_suite, test_write_byte)
 {
 	const uint8_t wr = 0x00;
 	uint8_t rd = 0xff;
@@ -130,7 +130,7 @@ static void test_write_byte(void)
 }
 
 /* Test write a pattern of bytes at increasing address */
-static void test_write_at_increasing_address(void)
+ZTEST(test_eeprom_suite, test_write_at_increasing_address)
 {
 	const uint8_t wr_buf1[8] = {0xEE, 0xDD, 0xCC, 0xBB, 0xFF, 0xEE, 0xDD,
 				    0xCC };
@@ -153,7 +153,7 @@ static void test_write_at_increasing_address(void)
 }
 
 /* Test writing zero length data */
-static void test_zero_length_write(void)
+ZTEST(test_eeprom_suite, test_zero_length_write)
 {
 	const uint8_t wr_buf1[4] = { 0x10, 0x20, 0x30, 0x40 };
 	const uint8_t wr_buf2[sizeof(wr_buf1)] = { 0xAA, 0xBB, 0xCC, 0xDD };
@@ -182,8 +182,8 @@ static void test_zero_length_write(void)
 	zassert_equal(0, rc, "Unexpected error code (%d)", rc);
 }
 
-/* Run all of our tests on EEPROM device with the given label */
-static void run_tests_on_eeprom(const char *label_eeprom, const char *label_i2c)
+/* Configure all of our tests on EEPROM device with the given label */
+static void eeprom_i2c_test_configure(const char *label_eeprom, const char *label_i2c)
 {
 	const struct device *eeprom = device_get_binding(label_eeprom);
 	const struct device *i2c;
@@ -200,36 +200,47 @@ static void run_tests_on_eeprom(const char *label_eeprom, const char *label_i2c)
 					I2C_SPEED_SET(I2C_SPEED_STANDARD));
 		}
 	}
-
-	ztest_test_suite(eeprom_api,
-			 ztest_user_unit_test(test_size),
-			 ztest_user_unit_test(test_out_of_bounds),
-			 ztest_user_unit_test(test_write_rewrite),
-			 ztest_user_unit_test(test_write_at_fixed_address),
-			 ztest_user_unit_test(test_write_byte),
-			 ztest_user_unit_test(test_write_at_increasing_address),
-			 ztest_user_unit_test(test_zero_length_write));
-	ztest_run_test_suite(eeprom_api);
 }
 
-void test_main(void)
+static void test_eeprom0_setup(void)
 {
-	const char *i2c_eeprom_0;
+	const char *label_eeprom = DT_LABEL(DT_ALIAS(eeprom_0));
+	const char *i2c_eeprom_0 =
+	  COND_CODE_1(DT_NODE_EXISTS(DT_BUS(DT_ALIAS(eeprom_0))),
+		      (DT_BUS_LABEL(DT_ALIAS(eeprom_0))), (NULL));
+
+	eeprom_i2c_test_configure(label_eeprom, i2c_eeprom_0);
+}
+
+static bool only_true_predicate(const void *state)
+{
+	return true;
+}
+
+ZTEST_SUITE(test_eeprom_suite, only_true_predicate, NULL, NULL, NULL, NULL);
+
 #ifdef DT_N_ALIAS_eeprom_1
-	const char *i2c_eeprom_1;
-#endif
+static void test_eeprom1_setup(void)
+{
+	const char *label_eeprom = DT_LABEL(DT_ALIAS(eeprom_1));
+	const char *i2c_eeprom_1 =
+	  COND_CODE_1(DT_NODE_EXISTS(DT_BUS(DT_ALIAS(eeprom_1))),
+		      (DT_BUS_LABEL(DT_ALIAS(eeprom_1))), (NULL));
 
-	i2c_eeprom_0 = COND_CODE_1(DT_NODE_EXISTS(DT_BUS(DT_ALIAS(eeprom_0))),
-			(DT_BUS_LABEL(DT_ALIAS(eeprom_0))), (NULL));
+	eeprom_i2c_test_configure(label_eeprom, i2c_eeprom_1);
+}
+
+#endif /* DT_N_ALIAS_eeprom_1 */
+
+
+/* Necessary to rerun tests with different config */
+void test_eeprom_main(void)
+{
+	test_eeprom0_setup();
+	ztest_run_test_suite(test_eeprom_suite);
+
 #ifdef DT_N_ALIAS_eeprom_1
-	i2c_eeprom_1 = COND_CODE_1(DT_NODE_EXISTS(DT_BUS(DT_ALIAS(eeprom_1))),
-			(DT_BUS_LABEL(DT_ALIAS(eeprom_1))), (NULL));
-#endif
-
-	run_tests_on_eeprom(DT_LABEL(DT_ALIAS(eeprom_0)), i2c_eeprom_0);
-
-#ifdef DT_N_ALIAS_eeprom_1
-	run_tests_on_eeprom(DT_LABEL(DT_ALIAS(eeprom_1)), i2c_eeprom_1);
-#endif
-
+	test_eeprom1_setup();
+	ztest_run_test_suite(test_eeprom_suite);
+#endif /* DT_N_ALIAS_eeprom_1 */
 }

@@ -32,12 +32,12 @@ static void test_sdram_rw(uint32_t *mem)
 /** Buffer on SDRAM1. */
 __stm32_sdram1_section uint32_t sdram1[BUF_SIZE];
 
-static void test_sdram1_rw(void)
+ZTEST(stm32_sdram_test, test_sdram1_rw)
 {
 	test_sdram_rw(sdram1);
 }
 #else
-static void test_sdram1_rw(void)
+ZTEST(stm32_sdram_test, test_sdram1_rw)
 {
 	ztest_test_skip();
 }
@@ -47,22 +47,16 @@ static void test_sdram1_rw(void)
 /** Buffer on SDRAM2. */
 __stm32_sdram2_section uint32_t sdram2[BUF_SIZE];
 
-static void test_sdram2_rw(void)
+ZTEST(stm32_sdram_test, test_sdram2_rw)
 {
 	test_sdram_rw(sdram2);
 }
 
 #else
-static void test_sdram2_rw(void)
+ZTEST(stm32_sdram_test, test_sdram2_rw)
 {
 	ztest_test_skip();
 }
 #endif
 
-void test_main(void)
-{
-	ztest_test_suite(stm32_sdram,
-			 ztest_unit_test(test_sdram1_rw),
-			 ztest_unit_test(test_sdram2_rw));
-	ztest_run_test_suite(stm32_sdram);
-}
+ZTEST_SUITE(stm32_sdram_test, NULL, NULL, NULL, NULL, NULL);

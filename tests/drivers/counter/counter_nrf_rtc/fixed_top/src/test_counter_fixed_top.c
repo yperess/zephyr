@@ -71,7 +71,7 @@ void test_set_custom_top_value_fails_on_instance(const char *dev_name)
 	zassert_true(err != 0, "%s: Expected error code", dev_name);
 }
 
-void test_set_custom_top_value_fails(void)
+ZTEST(test_counter_nrf_rtc, test_set_custom_top_value_fails)
 {
 	test_all_instances(test_set_custom_top_value_fails_on_instance);
 }
@@ -111,16 +111,9 @@ void test_top_handler_on_instance(const char *dev_name)
 	zassert_equal(tmp_top_cnt, 1, "%s: Expected top handler", dev_name);
 }
 
-void test_top_handler(void)
+ZTEST(test_counter_nrf_rtc, test_top_handler)
 {
 	test_all_instances(test_top_handler_on_instance);
 }
 
-void test_main(void)
-{
-	ztest_test_suite(test_counter,
-		ztest_unit_test(test_set_custom_top_value_fails),
-		ztest_unit_test(test_top_handler)
-			 );
-	ztest_run_test_suite(test_counter);
-}
+ZTEST_SUITE(test_counter_nrf_rtc, NULL, NULL, NULL, NULL, NULL);

@@ -10,7 +10,7 @@
 #include <device.h>
 #include "i2s_api_test.h"
 
-void test_main(void)
+static void * i2s_tests_setup(void)
 {
 	const struct device *dev_i2s_rx;
 	const struct device *dev_i2s_tx;
@@ -28,80 +28,74 @@ void test_main(void)
 		k_object_access_grant(dev_i2s_tx, k_current_get());
 	}
 
-	ztest_test_suite(i2s_loopback_test,
-		ztest_unit_test(test_i2s_tx_transfer_configure_0),
-		ztest_unit_test(test_i2s_rx_transfer_configure_0),
-		ztest_unit_test(test_i2s_transfer_short),
-		ztest_unit_test(test_i2s_transfer_long),
-		ztest_unit_test(test_i2s_rx_sync_start),
-		ztest_unit_test(test_i2s_rx_empty_timeout),
-		ztest_unit_test(test_i2s_transfer_restart),
-		ztest_unit_test(test_i2s_transfer_rx_overrun),
-		ztest_unit_test(test_i2s_transfer_tx_underrun));
-	ztest_run_test_suite(i2s_loopback_test);
-
-	ztest_test_suite(i2s_states_test,
-		ztest_unit_test(test_i2s_tx_transfer_configure_1),
-		ztest_unit_test(test_i2s_rx_transfer_configure_1),
-		ztest_unit_test(test_i2s_state_not_ready_neg),
-		ztest_unit_test(test_i2s_state_ready_neg),
-		ztest_unit_test(test_i2s_state_running_neg),
-		ztest_unit_test(test_i2s_state_stopping_neg),
-		ztest_unit_test(test_i2s_state_error_neg));
-	ztest_run_test_suite(i2s_states_test);
-
-	ztest_test_suite(i2s_dir_both_loopback_test,
-		ztest_unit_test(test_i2s_dir_both_transfer_configure_0),
-		ztest_unit_test(test_i2s_dir_both_transfer_short),
-		ztest_unit_test(test_i2s_dir_both_transfer_long),
-		ztest_unit_test(test_i2s_dir_both_transfer_restart),
-		ztest_unit_test(test_i2s_dir_both_transfer_rx_overrun),
-		ztest_unit_test(test_i2s_dir_both_transfer_tx_underrun));
-	ztest_run_test_suite(i2s_dir_both_loopback_test);
-
-	ztest_test_suite(i2s_dir_both_states_test,
-		ztest_unit_test(test_i2s_dir_both_transfer_configure_1),
-		ztest_unit_test(test_i2s_dir_both_state_running_neg),
-		ztest_unit_test(test_i2s_dir_both_state_stopping_neg),
-		ztest_unit_test(test_i2s_dir_both_state_error_neg));
-	ztest_run_test_suite(i2s_dir_both_states_test);
-
-	/* Now run all tests in user mode */
-	ztest_test_suite(i2s_user_loopback_test,
-		ztest_user_unit_test(test_i2s_tx_transfer_configure_0),
-		ztest_user_unit_test(test_i2s_rx_transfer_configure_0),
-		ztest_user_unit_test(test_i2s_transfer_short),
-		ztest_user_unit_test(test_i2s_transfer_long),
-		ztest_user_unit_test(test_i2s_rx_sync_start),
-		ztest_user_unit_test(test_i2s_rx_empty_timeout),
-		ztest_user_unit_test(test_i2s_transfer_restart),
-		ztest_user_unit_test(test_i2s_transfer_tx_underrun),
-		ztest_user_unit_test(test_i2s_transfer_rx_overrun));
-	ztest_run_test_suite(i2s_user_loopback_test);
-
-	ztest_test_suite(i2s_user_states_test,
-		ztest_user_unit_test(test_i2s_tx_transfer_configure_1),
-		ztest_user_unit_test(test_i2s_rx_transfer_configure_1),
-		ztest_user_unit_test(test_i2s_state_not_ready_neg),
-		ztest_user_unit_test(test_i2s_state_ready_neg),
-		ztest_user_unit_test(test_i2s_state_running_neg),
-		ztest_user_unit_test(test_i2s_state_stopping_neg),
-		ztest_user_unit_test(test_i2s_state_error_neg));
-	ztest_run_test_suite(i2s_user_states_test);
-
-	ztest_test_suite(i2s_dir_both_user_loopback_test,
-		ztest_user_unit_test(test_i2s_dir_both_transfer_configure_0),
-		ztest_user_unit_test(test_i2s_dir_both_transfer_short),
-		ztest_user_unit_test(test_i2s_dir_both_transfer_long),
-		ztest_user_unit_test(test_i2s_dir_both_transfer_restart),
-		ztest_user_unit_test(test_i2s_dir_both_transfer_rx_overrun),
-		ztest_user_unit_test(test_i2s_dir_both_transfer_tx_underrun));
-	ztest_run_test_suite(i2s_dir_both_user_loopback_test);
-
-	ztest_test_suite(i2s_dir_both_user_states_test,
-		ztest_user_unit_test(test_i2s_dir_both_transfer_configure_1),
-		ztest_user_unit_test(test_i2s_dir_both_state_running_neg),
-		ztest_user_unit_test(test_i2s_dir_both_state_stopping_neg),
-		ztest_user_unit_test(test_i2s_dir_both_state_error_neg));
-	ztest_run_test_suite(i2s_dir_both_user_states_test);
+	return NULL;
 }
+
+ZTEST(i2s_tests, i2s_tests)
+{
+	test_i2s_tx_transfer_configure_0();
+	test_i2s_rx_transfer_configure_0();
+	test_i2s_transfer_short();
+	test_i2s_transfer_long();
+	test_i2s_rx_sync_start();
+	test_i2s_rx_empty_timeout();
+	test_i2s_transfer_restart();
+	test_i2s_transfer_tx_underrun();
+	test_i2s_transfer_rx_overrun();
+
+	test_i2s_tx_transfer_configure_1();
+	test_i2s_rx_transfer_configure_1();
+	test_i2s_state_not_ready_neg();
+	test_i2s_state_ready_neg();
+	test_i2s_state_running_neg();
+	test_i2s_state_stopping_neg();
+	test_i2s_state_error_neg();
+
+	test_i2s_dir_both_transfer_configure_0();
+	test_i2s_dir_both_transfer_short();
+	test_i2s_dir_both_transfer_long();
+	test_i2s_dir_both_transfer_restart();
+	test_i2s_dir_both_transfer_rx_overrun();
+	test_i2s_dir_both_transfer_tx_underrun();
+
+	test_i2s_dir_both_transfer_configure_1();
+	test_i2s_dir_both_state_running_neg();
+	test_i2s_dir_both_state_stopping_neg();
+	test_i2s_dir_both_state_error_neg();
+}
+
+/* Neccessary to run all tests in user mode */
+ZTEST_USER(i2s_tests, i2s_user_tests)
+{
+	test_i2s_tx_transfer_configure_0();
+	test_i2s_rx_transfer_configure_0();
+	test_i2s_transfer_short();
+	test_i2s_transfer_long();
+	test_i2s_rx_sync_start();
+	test_i2s_rx_empty_timeout();
+	test_i2s_transfer_restart();
+	test_i2s_transfer_tx_underrun();
+	test_i2s_transfer_rx_overrun();
+
+	test_i2s_tx_transfer_configure_1();
+	test_i2s_rx_transfer_configure_1();
+	test_i2s_state_not_ready_neg();
+	test_i2s_state_ready_neg();
+	test_i2s_state_running_neg();
+	test_i2s_state_stopping_neg();
+	test_i2s_state_error_neg();
+
+	test_i2s_dir_both_transfer_configure_0();
+	test_i2s_dir_both_transfer_short();
+	test_i2s_dir_both_transfer_long();
+	test_i2s_dir_both_transfer_restart();
+	test_i2s_dir_both_transfer_rx_overrun();
+	test_i2s_dir_both_transfer_tx_underrun();
+
+	test_i2s_dir_both_transfer_configure_1();
+	test_i2s_dir_both_state_running_neg();
+	test_i2s_dir_both_state_stopping_neg();
+	test_i2s_dir_both_state_error_neg();
+}
+
+ZTEST_SUITE(i2s_tests, NULL, i2s_tests_setup, NULL, NULL, NULL);

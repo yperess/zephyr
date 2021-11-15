@@ -72,7 +72,7 @@ static void test_check_pattern32(off_t start, uint32_t (*pattern_gen)(void),
 }
 
 /* Get access to the device and erase it ready for testing*/
-static void test_init(void)
+ZTEST(test_flash_sim_api, test_init)
 {
 	int rc;
 
@@ -86,7 +86,7 @@ static void test_init(void)
 	zassert_equal(0, rc, "flash_erase should succeed");
 }
 
-static void test_read(void)
+ZTEST(test_flash_sim_api, test_read)
 {
 	off_t i;
 	int rc;
@@ -103,7 +103,7 @@ static void test_read(void)
 	}
 }
 
-static void test_write_read(void)
+ZTEST(test_flash_sim_api, test_write_read)
 {
 	off_t off;
 	uint32_t val32 = 0, r_val32;
@@ -134,7 +134,7 @@ static void test_write_read(void)
 	}
 }
 
-static void test_erase(void)
+ZTEST(test_flash_sim_api, test_erase)
 {
 	int rc;
 
@@ -162,7 +162,7 @@ static void test_erase(void)
 			     FLASH_SIMULATOR_ERASE_UNIT*2);
 }
 
-static void test_out_of_bounds(void)
+ZTEST(test_flash_sim_api, test_out_of_bounds)
 {
 	int rc;
 	uint8_t data[8] = {0};
@@ -218,7 +218,7 @@ static void test_out_of_bounds(void)
 	zassert_equal(-EINVAL, rc, "Unexpected error code (%d)", rc);
 }
 
-static void test_align(void)
+ZTEST(test_flash_sim_api, test_align)
 {
 	int rc;
 	uint8_t data[4] = {0};
@@ -246,7 +246,7 @@ static void test_align(void)
 	zassert_equal(-EINVAL, rc, "Unexpected error code (%d)", rc);
 }
 
-static void test_double_write(void)
+ZTEST(test_flash_sim_api, test_double_write)
 {
 	int rc;
 	/* Test checks behaviour of write when attempting to double write
@@ -270,7 +270,7 @@ static void test_double_write(void)
 	zassert_equal(-EIO, rc, "Unexpected error code (%d)", rc);
 }
 
-static void test_get_erase_value(void)
+ZTEST(test_flash_sim_api, test_get_erase_value)
 {
 	const struct flash_parameters *fp = flash_get_parameters(flash_dev);
 
@@ -281,7 +281,7 @@ static void test_get_erase_value(void)
 
 #include <drivers/flash/flash_simulator.h>
 
-static void test_get_mock(void)
+ZTEST(test_flash_sim_api, test_get_mock)
 {
 #ifdef CONFIG_ARCH_POSIX
 	ztest_test_skip();
@@ -299,18 +299,4 @@ static void test_get_mock(void)
 #endif
 }
 
-void test_main(void)
-{
-	ztest_test_suite(flash_sim_api,
-			 ztest_unit_test(test_init),
-			 ztest_unit_test(test_read),
-			 ztest_unit_test(test_write_read),
-			 ztest_unit_test(test_erase),
-			 ztest_unit_test(test_out_of_bounds),
-			 ztest_unit_test(test_align),
-			 ztest_unit_test(test_get_erase_value),
-			 ztest_unit_test(test_double_write),
-			 ztest_unit_test(test_get_mock));
-
-	ztest_run_test_suite(flash_sim_api);
-}
+ZTEST_SUITE(test_flash_sim_api, NULL, NULL, NULL, NULL, NULL);

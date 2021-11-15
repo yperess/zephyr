@@ -30,9 +30,6 @@ static void test_acpi_shared_memory(void)
 	zassert_equal(host_shm, peripheral_shm, NULL);
 }
 
-ztest_test_suite(acpi, ztest_unit_test(test_acpi_shared_memory));
+ZTEST(test_acpi, test_acpi_shared_memory)
 
-void test_main(void)
-{
-	ztest_run_test_suite(acpi);
-}
+ZTEST_SUITE(test_acpi, NULL, NULL, NULL, NULL, NULL);

@@ -101,7 +101,7 @@ static int test_task_write_value(void)
 	return TC_PASS;
 }
 
-void test_dac_write_value(void)
+ZTEST(dac_basic_test, test_dac_write_value)
 {
 	zassert_true(test_task_write_value() == TC_PASS, NULL);
 }

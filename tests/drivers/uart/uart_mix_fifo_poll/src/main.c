@@ -296,7 +296,7 @@ static void init_test_data(struct test_data *data, int id, int repeat)
 	data->max = repeat;
 }
 
-static void test_mixed_uart_access(void)
+ZTEST(uart_mix_fifo_poll_test, test_mixed_uart_access)
 {
 	int repeat = 10000;
 	int err;
@@ -347,12 +347,12 @@ static void test_mixed_uart_access(void)
 
 }
 
-void test_main(void)
+static void * uart_mix_fifo_poll_test_setup(void)
 {
 	init_test();
 
-	ztest_test_suite(uart_mix_fifo_poll_test,
-			 ztest_unit_test(test_mixed_uart_access)
-			 );
-	ztest_run_test_suite(uart_mix_fifo_poll_test);
+	return NULL;
 }
+
+ZTEST_SUITE(uart_mix_fifo_poll_test, NULL, uart_mix_fifo_poll_test_setup,
+	    NULL, NULL, NULL);

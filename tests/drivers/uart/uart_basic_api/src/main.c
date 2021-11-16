@@ -56,7 +56,7 @@ void test_uart_pending(void)
 }
 #endif
 
-void test_main(void)
+static void * uart_basic_test_setup(void)
 {
 #if defined(CONFIG_USB_UART_CONSOLE)
 	const struct device *dev;
@@ -71,16 +71,22 @@ void test_main(void)
 		uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
 		k_sleep(K_MSEC(100));
 	}
-#endif
-#ifndef CONFIG_SHELL
-	ztest_test_suite(uart_basic_test,
-			 ztest_unit_test(test_uart_configure),
-			 ztest_unit_test(test_uart_config_get),
-			 ztest_unit_test(test_uart_fifo_fill),
-			 ztest_unit_test(test_uart_fifo_read),
-			 ztest_unit_test(test_uart_poll_in),
-			 ztest_unit_test(test_uart_poll_out),
-			 ztest_unit_test(test_uart_pending));
-	ztest_run_test_suite(uart_basic_test);
-#endif
+#endif /* CONFIG_USB_UART_CONSOLE */
+	return NULL;
 }
+
+ZTEST(uart_basic_test, uart_basic_test)
+{
+	/* Tests all in one ztest due to test order dependencies */
+#ifndef CONFIG_SHELL
+	test_uart_configure();
+	test_uart_config_get();
+	test_uart_fifo_fill();
+	test_uart_fifo_read();
+	test_uart_poll_in();
+	test_uart_poll_out();
+	test_uart_pending);
+#endi/* CONFIG_SHELL */f
+}
+
+ZTEST_SUITE(uart_basic_test, NULL, uart_basic_test_setup, NULL, NULL, NULL);

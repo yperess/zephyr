@@ -58,14 +58,15 @@ void test_single_read_callback(const struct device *dev,
 
 ZTEST_BMEM volatile uint32_t tx_aborted_count;
 
-void test_single_read_setup(void)
+void * test_single_read_setup(void *data)
 {
 	uart_callback_set(uart_dev,
 			  test_single_read_callback,
 			  (void *) &tx_aborted_count);
+	return NULL;
 }
 
-void test_single_read(void)
+ZTEST_USER(test_single_read_suite, test_single_read)
 {
 	uint8_t rx_buf[10] = {0};
 	uint8_t tx_buf[5] = "test";
@@ -142,12 +143,14 @@ void test_chained_read_callback(const struct device *uart_dev,
 
 }
 
-void test_chained_read_setup(void)
+void * test_chained_read_setup(void *data)
 {
 	uart_callback_set(uart_dev, test_chained_read_callback, NULL);
+
+	return NULL;
 }
 
-void test_chained_read(void)
+ZTEST_USER(test_chained_read_suite, test_chained_read)
 {
 	uint8_t tx_buf[10];
 
@@ -205,12 +208,14 @@ void test_double_buffer_callback(const struct device *uart_dev,
 
 }
 
-void test_double_buffer_setup(void)
+void * test_double_buffer_setup(void *data)
 {
 	uart_callback_set(uart_dev, test_double_buffer_callback, NULL);
+
+	return NULL;
 }
 
-void test_double_buffer(void)
+ZTEST_USER(test_double_buffer_suite, test_double_buffer)
 {
 	uint8_t tx_buf[4];
 
@@ -266,7 +271,7 @@ void test_read_abort_callback(const struct device *dev,
 	}
 }
 
-void test_read_abort_setup(void)
+void * test_read_abort_setup(void *data)
 {
 	failed_in_isr = false;
 	uart_callback_set(uart_dev, test_read_abort_callback, NULL);
@@ -275,9 +280,11 @@ void test_read_abort_setup(void)
 	k_sem_reset(&rx_buf_released);
 	k_sem_reset(&rx_disabled);
 	k_sem_reset(&tx_done);
+
+	return NULL;
 }
 
-void test_read_abort(void)
+ZTEST_USER(test_read_abort_suite, test_read_abort)
 {
 	uint8_t rx_buf[100];
 	uint8_t tx_buf[100];
@@ -346,12 +353,14 @@ void test_write_abort_callback(const struct device *dev,
 	}
 }
 
-void test_write_abort_setup(void)
+void * test_write_abort_setup(void *data)
 {
 	uart_callback_set(uart_dev, test_write_abort_callback, NULL);
+
+	return NULL;
 }
 
-void test_write_abort(void)
+ZTEST_USER(test_write_abort_suite, test_write_abort)
 {
 	uint8_t rx_buf[100];
 	uint8_t tx_buf[100];
@@ -412,12 +421,14 @@ void test_forever_timeout_callback(const struct device *dev,
 	}
 }
 
-void test_forever_timeout_setup(void)
+void * test_forever_timeout_setup(void *data)
 {
 	uart_callback_set(uart_dev, test_forever_timeout_callback, NULL);
+
+	return NULL;
 }
 
-void test_forever_timeout(void)
+ZTEST_USER(test_forever_timeout_suite, test_forever_timeout)
 {
 	uint8_t rx_buf[100];
 	uint8_t tx_buf[100];
@@ -488,12 +499,14 @@ void test_chained_write_callback(const struct device *uart_dev,
 	}
 }
 
-void test_chained_write_setup(void)
+void * test_chained_write_setup(void *data)
 {
 	uart_callback_set(uart_dev, test_chained_write_callback, NULL);
+
+	return NULL;
 }
 
-void test_chained_write(void)
+ZTEST_USER(test_chained_write_suite, test_chained_write)
 {
 	uint8_t rx_buf[20];
 
@@ -563,12 +576,14 @@ void test_long_buffers_callback(const struct device *uart_dev,
 	}
 }
 
-void test_long_buffers_setup(void)
+void * test_long_buffers_setup(void *data)
 {
 	uart_callback_set(uart_dev, test_long_buffers_callback, NULL);
+
+	return NULL;
 }
 
-void test_long_buffers(void)
+ZTEST_USER(test_long_buffers_suite, test_long_buffers)
 {
 	memset(long_rx_buf, 0, sizeof(long_rx_buf));
 	memset(long_tx_buf, 1, sizeof(long_tx_buf));

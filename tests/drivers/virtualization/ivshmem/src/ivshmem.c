@@ -9,7 +9,7 @@
 
 #include <drivers/virtualization/ivshmem.h>
 
-void test_ivshmem_plain(void)
+ZTEST(test_ivshmem, test_ivshmem_plain)
 {
 	const struct device *ivshmem;
 	uintptr_t mem;
@@ -48,9 +48,4 @@ void test_ivshmem_plain(void)
 		      "registering handlers should not be supported");
 }
 
-void test_main(void)
-{
-	ztest_test_suite(test_ivshmem,
-			 ztest_unit_test(test_ivshmem_plain));
-	ztest_run_test_suite(test_ivshmem);
-}
+ZTEST_SUITE(test_ivshmem, NULL, NULL, NULL, NULL, NULL);

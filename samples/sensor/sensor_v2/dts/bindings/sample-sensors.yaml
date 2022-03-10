@@ -1,0 +1,11 @@
+
+description: |
+  Various arrays in order to configure the sample app
+
+compatible: "sample-sensors"
+
+properties:
+  accels:
+    type: phandles
+  gyros:
+    type: phandles

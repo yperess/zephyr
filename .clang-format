@@ -68,6 +68,8 @@ IfMacros:
   - 'CHECKIF'
 # Disabled for now, see bug https://github.com/zephyrproject-rtos/zephyr/issues/48520
 #IncludeBlocks: Regroup
+BraceWrapping:
+  AfterControlStatement: Always
 IncludeCategories:
   - Regex: '^".*\.h"$'
     Priority: 0
@@ -79,7 +81,8 @@ IncludeCategories:
     Priority: 3
 IndentCaseLabels: false
 IndentWidth: 8
-InsertBraces: true
+# Disabled for now, see bug https://github.com/zephyrproject-rtos/zephyr/issues/53917
+#InsertBraces: true
 SpaceBeforeParens: ControlStatementsExceptControlMacros
 SortIncludes: Never
 UseTab: Always

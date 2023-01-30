@@ -49,7 +49,6 @@ int icm42688_reset(const struct device *dev)
 	}
 
 	res = icm42688_spi_read(&dev_cfg->spi, REG_WHO_AM_I, &value, 1);
-
 	if (res) {
 		return res;
 	}
@@ -59,8 +58,15 @@ int icm42688_reset(const struct device *dev)
 		return -EINVAL;
 	}
 
-	LOG_DBG("device id: 0x%02X", value);
-	return res;
+	/* Always use internal RC oscillator */
+	res = icm42688_spi_single_write(&dev_cfg->spi, REG_INTF_CONFIG1,
+					FIELD_PREP(MASK_CLKSEL, BIT_CLKSEL_INT_RC));
+	if (res) {
+		return res;
+	}
+
+	/* Switch on MCLK by setting the IDLE bit */
+	return icm42688_spi_single_write(&dev_cfg->spi, REG_PWR_MGMT0, BIT_IDLE);
 }
 
 int icm42688_configure(const struct device *dev, struct icm42688_cfg *cfg)
@@ -74,6 +80,7 @@ int icm42688_configure(const struct device *dev, struct icm42688_cfg *cfg)
 
 	/* if fifo is enabled right now, disable and flush */
 	if (dev_data->cfg.fifo_en) {
+		LOG_DBG("Bypassing FIFO");
 		res = icm42688_spi_single_write(&dev_cfg->spi, REG_FIFO_CONFIG,
 						FIELD_PREP(MASK_FIFO_MODE, BIT_FIFO_MODE_BYPASS));
 

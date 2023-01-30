@@ -5,6 +5,8 @@
 
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/emul.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/gpio/gpio_emul.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/ztest.h>
 
@@ -208,4 +210,21 @@ ZTEST_F(icm42688, test_fetch_gyro)
 	test_fetch_gyro_with_range(fixture, 62500, gyro_percent);
 	test_fetch_gyro_with_range(fixture, 31250, gyro_percent);
 	test_fetch_gyro_with_range(fixture, 15625, gyro_percent);
+}
+
+ZTEST_F(icm42688, test_interrupt)
+{
+	const struct gpio_dt_spec spec = {
+		.port = DEVICE_DT_GET(DT_NODELABEL(gpio0)),
+		.pin = 1,
+		.dt_flags = GPIO_ACTIVE_HIGH,
+	};//GPIO_DT_SPEC_GET_BY_IDX(DT_NODELABL(icm42688), int_gpios, 0);
+
+	gpio_emul_input_set(spec.port, spec.pin, 0);
+
+	k_msleep(5);
+
+	gpio_emul_input_set(spec.port, spec.pin, 1);
+
+	k_msleep(5);
 }

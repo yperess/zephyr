@@ -54,14 +54,50 @@ static void data_ready_trigger_handler(const struct device *sensor,
 	}
 }
 
+#define CHIRP DT_NODELABEL(chirp)
+
 void main(void)
 {
-	STRUCT_SECTION_FOREACH(sensor_info, sensor)
-	{
-		struct sensor_trigger trigger = {
-			.chan = SENSOR_CHAN_ALL,
-			.type = SENSOR_TRIG_DATA_READY,
-		};
-		sensor_trigger_set(sensor->dev, &trigger, data_ready_trigger_handler);
+	const struct device *chirp = DEVICE_DT_GET(CHIRP);
+	struct sensor_value val;
+	int rc;
+
+	LOG_INF("\n\n********** Starting sampling run **********\n\n");
+
+	val.val1 = 0;
+	val.val2 = 500000;
+	rc = sensor_attr_set(chirp, SENSOR_CHAN_DISTANCE, SENSOR_ATTR_SAMPLING_FREQUENCY, &val);
+	LOG_INF("Setting sampling frequency (%d)", rc);
+	if (rc) {
+		return;
 	}
+	k_msleep(5);
+
+	for (int i = 0; i < 5; ++i) {
+		k_msleep(5000);
+		rc = sensor_sample_fetch(chirp);
+		LOG_INF("\n\nFetching samples (%d)", rc);
+		k_msleep(5);
+
+		if (rc) {
+			continue;
+		}
+
+		rc = sensor_channel_get(chirp, SENSOR_CHAN_DISTANCE, &val);
+		LOG_INF("    Getting cached distance (%d)", rc);
+		k_msleep(5);
+		if (rc) {
+			continue;
+		}
+
+		LOG_INF("    Distance = %d.%06dm", val.val1, val.val2);
+	}
+//	STRUCT_SECTION_FOREACH(sensor_info, sensor)
+//	{
+//		struct sensor_trigger trigger = {
+//			.chan = SENSOR_CHAN_ALL,
+//			.type = SENSOR_TRIG_DATA_READY,
+//		};
+//		sensor_trigger_set(sensor->dev, &trigger, data_ready_trigger_handler);
+//	}
 }

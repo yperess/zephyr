@@ -52,7 +52,7 @@ extern "C" {
  * @}
  */
 
-
+struct rtio;
 struct rtio_iodev;
 
 /**
@@ -147,7 +147,6 @@ struct rtio_sqe {
 		/** OP_TX, OP_RX */
 		struct {
 			uint32_t buf_len; /**< Length of buffer */
-
 			uint8_t *buf; /**< Buffer to use*/
 		};
 
@@ -159,11 +158,17 @@ struct rtio_sqe {
 
 		/** OP_CALLBACK */
 		struct {
-			void (*callback)(struct rtio *r, struct rtio_sqe *sqe, void *arg0);
-			void *arg0;
+			void (*callback)(struct rtio *r, const struct rtio_sqe *sqe, void *arg0);
+			void *arg0; /**< Last argument given to callback */
 		};
 	};
 };
+
+/* Adjust as needed to account for the byte size of each submission queue entry. */
+BUILD_ASSERT(sizeof(struct rtio_sqe) == 20);
+
+/* Ensure the rtio_sqe never grows beyond a common cacheline size of 64 bytes */
+BUILD_ASSERT(sizeof(struct rtio_sqe) <= 64);
 
 /**
  * @brief Submission queue
@@ -341,11 +346,11 @@ struct rtio_iodev {
 /** An operation that transmits (writes) */
 #define RTIO_OP_TX (RTIO_OP_RX+1)
 
-/** An operation that transmits tiny writes */
+/** An operation that transmits tiny writes by copying the data to write */
 #define RTIO_OP_TINY_TX (RTIO_OP_TX+1)
 
-/** An operation that does some small functional work */
-#define RTIO_OP_FUNC (RTIO_OP_TINY_TX+1)
+/** An operation that calls a given function (callback) */
+#define RTIO_OP_CALLBACK (RTIO_OP_TINY_TX+1)
 
 
 /**
@@ -412,7 +417,7 @@ static inline void rtio_sqe_prep_write(struct rtio_sqe *sqe,
 static inline void rtio_sqe_prep_tiny_write(struct rtio_sqe *sqe,
 				       const struct rtio_iodev *iodev,
 				       int8_t prio,
-				       uint8_t *tiny_write_data,
+				       const uint8_t *tiny_write_data,
 				       uint8_t tiny_write_len,
 				       void *userdata)
 {
@@ -424,6 +429,30 @@ static inline void rtio_sqe_prep_tiny_write(struct rtio_sqe *sqe,
 	sqe->iodev = iodev;
 	sqe->tiny_buf_len = tiny_write_len;
 	memcpy(sqe->tiny_buf, tiny_write_data, tiny_write_len);
+	sqe->userdata = userdata;
+}
+
+/**
+ * @brief Prepare a callback op submission
+ *
+ * A somewhat special operation in that it may only be done in kernel mode.
+ *
+ * Used where general purpose logic is required in a queue of io operations to do
+ * transforms or logic.
+ */
+static inline void rtio_sqe_prep_callback(struct rtio_sqe *sqe,
+					  void (*callback)(struct rtio *r,
+							   const struct rtio_sqe *sqe,
+							   void *arg),
+					  void *arg0,
+					  void *userdata)
+{
+	sqe->op = RTIO_OP_CALLBACK;
+	sqe->prio = 0;
+	sqe->flags = 0;
+	sqe->iodev = NULL;
+	sqe->callback = callback;
+	sqe->arg0 = arg0;
 	sqe->userdata = userdata;
 }
 

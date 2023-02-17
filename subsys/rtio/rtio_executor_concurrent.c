@@ -5,6 +5,7 @@
  */
 
 #include <zephyr/spinlock.h>
+#include "rtio_executor_common.h"
 #include <zephyr/rtio/rtio_executor_concurrent.h>
 #include <zephyr/rtio/rtio.h>
 #include <zephyr/kernel.h>
@@ -152,7 +153,7 @@ static void conex_resume(struct rtio *r, struct rtio_concurrent_executor *exc)
 		if (exc->task_status[task_id & exc->task_mask] & CONEX_TASK_SUSPENDED) {
 			LOG_INF("resuming suspended task %d", task_id);
 			exc->task_status[task_id & exc->task_mask] &= ~CONEX_TASK_SUSPENDED;
-			rtio_iodev_submit(&exc->task_cur[task_id & exc->task_mask]);
+			rtio_executor_submit(&exc->task_cur[task_id & exc->task_mask]);
 		}
 	}
 }
@@ -220,7 +221,7 @@ void rtio_concurrent_ok(struct rtio_iodev_sqe *iodev_sqe, int result)
 		next_sqe = rtio_spsc_next(r->sq, sqe);
 
 		exc->task_cur[task_id].sqe = next_sqe;
-		rtio_iodev_submit(&exc->task_cur[task_id]);
+		rtio_executor_submit(&exc->task_cur[task_id]);
 	} else {
 		exc->task_status[task_id]  |= CONEX_TASK_COMPLETE;
 	}

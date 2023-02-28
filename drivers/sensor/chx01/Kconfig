@@ -51,3 +51,12 @@ config CH101_GPR_SR_FW
 	  is provided by TDK.
 
 endif # CH101
+
+if CHX01
+
+config CHX01_VERBOSE_DEBUGGING
+	bool "Print verbose debugging messages"
+	help
+	  Add extra logging messages intended to help debugging the chirp sensors.
+
+endif # CHX01

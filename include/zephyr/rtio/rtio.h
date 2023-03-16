@@ -36,6 +36,7 @@
 #include <zephyr/rtio/rtio_mpsc.h>
 #include <zephyr/sys/__assert.h>
 #include <zephyr/sys/atomic.h>
+#include <zephyr/sys/mem_blocks.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <string.h>
@@ -299,8 +300,15 @@ struct rtio {
 
 	/* Completion queue */
 	struct rtio_cq *cq;
-};
 
+#ifdef CONFIG_RTIO_MEMPOOL
+	/* Memory pool to use for reads */
+	struct sys_mem_blocks *mempool;
+
+	/* Size of each memory block */
+	uint32_t mempool_blk_size;
+#endif
+};
 
 /**
  * @brief IO device submission queue entry
@@ -521,15 +529,8 @@ static inline void rtio_sqe_prep_transceive(struct rtio_sqe *sqe,
 		.data = (iodev_data),                                                              \
 	}
 
-/**
- * @brief Statically define and initialize an RTIO context
- *
- * @param name Name of the RTIO
- * @param exec Symbol for rtio_executor (pointer)
- * @param sq_sz Size of the submission queue, must be power of 2
- * @param cq_sz Size of the completion queue, must be power of 2
- */
-#define RTIO_DEFINE(name, exec, sq_sz, cq_sz)	\
+/* clang-format off */
+#define _RTIO_DEFINE(name, exec, sq_sz, cq_sz, mempool, blk_size)                                  \
 	IF_ENABLED(CONFIG_RTIO_SUBMIT_SEM,							   \
 		   (static K_SEM_DEFINE(_submit_sem_##name, 0, K_SEM_MAX_LIMIT)))		   \
 	IF_ENABLED(CONFIG_RTIO_CONSUME_SEM,							   \
@@ -544,7 +545,37 @@ static inline void rtio_sqe_prep_transceive(struct rtio_sqe *sqe,
 		IF_ENABLED(CONFIG_RTIO_CONSUME_SEM, (.consume_sem = &_consume_sem_##name,))	   \
 		.sq = (struct rtio_sq *const)&_sq_##name,					   \
 		.cq = (struct rtio_cq *const)&_cq_##name,                                          \
+		IF_ENABLED(CONFIG_RTIO_MEMPOOL, (.mempool = mempool,))                             \
+		IF_ENABLED(CONFIG_RTIO_MEMPOOL, (.mempool_blk_size = blk_size,))                   \
 	};
+/* clang-format on */
+
+/**
+ * @brief Statically define and initialize an RTIO context
+ *
+ * @param name Name of the RTIO
+ * @param exec Symbol for rtio_executor (pointer)
+ * @param sq_sz Size of the submission queue, must be power of 2
+ * @param cq_sz Size of the completion queue, must be power of 2
+ */
+#define RTIO_DEFINE(name, exec, sq_sz, cq_sz) _RTIO_DEFINE(name, exec, sq_sz, cq_sz, NULL, 0)
+
+/**
+ * @brief Statically define and initialize an RTIO context with a backing RX memory pool
+ *
+ * @param name Name of the RTIO
+ * @param exec Symbol for rtio_executor (pointer)
+ * @param sq_sz Size of the submission queue, must be power of 2
+ * @param cq_sz Size of the completion queue, must be power of 2
+ * @param mempool_num_blks The number of memory pool blocks
+ * @param mempool_blk_size The size (in bytes) of each memory block
+ * @param mempool_align The byte alignment of each block (most commonly 4)
+ */
+#define RTIO_DEFINE_WITH_MEMPOOL(name, exec, sq_sz, cq_sz, mempool_num_blks, mempool_blk_size,     \
+				 mempool_align)                                                    \
+	SYS_MEM_BLOCKS_DEFINE_STATIC(name##_mempool, WB_UP(mempool_blk_size), mempool_num_blks,    \
+				     mempool_align);                                               \
+	_RTIO_DEFINE(name, exec, sq_sz, cq_sz, &name##_mempool, WB_UP(mempool_blk_size))
 
 /**
  * @brief Set the executor of the rtio context
@@ -552,6 +583,53 @@ static inline void rtio_sqe_prep_transceive(struct rtio_sqe *sqe,
 static inline void rtio_set_executor(struct rtio *r, struct rtio_executor *exc)
 {
 	r->executor = exc;
+}
+
+/**
+ * @brief Handle RX buffer allocation from memory pool if possible
+ *
+ * If the rtio context was created with a backing memory pool, and the operation is an RX operation,
+ * and the sqe does not yet have a buffer. Then this function will grab a block from the memory pool
+ * and set it as the sqe's buffer.
+ */
+static inline struct rtio_sqe *rtio_sqe_alloc_mempool(struct rtio *r, struct rtio_sqe *sqe)
+{
+#ifndef CONFIG_RTIO_MEMPOOL
+	return sqe;
+#else
+	if (r->mempool == NULL || sqe->op != RTIO_OP_RX || sqe->buf != NULL) {
+		return sqe;
+	}
+
+	sys_mem_blocks_alloc(r->mempool, 1, (void **)&sqe->buf);
+	sqe->buf_len = r->mempool_block_size;
+	return sqe;
+#endif
+}
+
+/**
+ * @brief If the sqe's buffer was allocated from the memory pool, free it
+ */
+static inline void rtio_sqe_free_mempool(struct rtio *r, const struct rtio_sqe *sqe)
+{
+#ifdef CONFIG_RTIO_MEMPOOL
+	uintptr_t buffer_start;
+	uintptr_t mempool_start;
+	uintptr_t mempool_end;
+	if (r->mempool == NULL) {
+		return;
+	}
+
+	buffer_start = (uintptr_t)sqe->buf;
+	mempool_start = (uintptr_t)r->mempool->buffer;
+	mempool_end = mempool_start + r->mempool->num_blocks * r->mempool_blk_size;
+	if (buffer_start < mempool_start || buffer_start >= mempool_end) {
+		return;
+	}
+
+	/* Buffer is inside the mempool buffer */
+	sys_mem_blocks_free(r->mempool, 1, (void**)&sqe->buf);
+#endif
 }
 
 /**

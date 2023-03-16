@@ -38,6 +38,13 @@ config RTIO_CONSUME_SEM
 	  will use polling on the completion queue with a k_yield() in between
 	  iterations.
 
+config RTIO_MEMPOOL
+	bool "Allow use of a system memory block allocator for read memory"
+	default y
+	help
+	  When pushing a new RTIO_OP_RX operation, it's possible to let the rtio
+	  subsystem handle the memory allocation on the fly.
+
 module = RTIO
 module-str = RTIO
 module-help = Sets log level for RTIO support

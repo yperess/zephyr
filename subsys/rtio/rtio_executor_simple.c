@@ -59,14 +59,10 @@ int rtio_simple_submit(struct rtio *r)
 		sqe);
 #endif
 
-	exc->task.sqe = sqe;
+	exc->task.sqe = rtio_sqe_alloc_mempool(r, sqe);
 	exc->task.r = r;
 
-	if (sqe != NULL) {
-		if (sqe != NULL) {
-			rtio_executor_submit(&exc->task);
-		}
-	}
+	rtio_executor_submit(&exc->task);
 
 	return 0;
 }
@@ -90,6 +86,8 @@ void rtio_simple_ok(struct rtio_iodev_sqe *iodev_sqe, int result)
 
 	while (transaction) {
 		rtio_spsc_release(r->sq);
+		/* Release the memory before getting a new sqe */
+		rtio_sqe_free_mempool(r, sqe);
 		sqe = rtio_spsc_consume(r->sq);
 		__ASSERT_NO_MSG(sqe != NULL);
 		transaction = sqe->flags & RTIO_SQE_TRANSACTION;
@@ -102,6 +100,9 @@ void rtio_simple_ok(struct rtio_iodev_sqe *iodev_sqe, int result)
 
 	rtio_cqe_submit(r, result, userdata);
 	rtio_simple_submit(r);
+
+	/* Release the memory */
+	rtio_sqe_free_mempool(r, sqe);
 }
 
 /**

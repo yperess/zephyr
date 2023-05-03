@@ -80,7 +80,7 @@ IncludeCategories:
     Priority: 3
 IndentCaseLabels: false
 IndentWidth: 8
-InsertBraces: true
+#InsertBraces: true
 SpaceBeforeParens: ControlStatementsExceptControlMacros
 SortIncludes: Never
 UseTab: Always

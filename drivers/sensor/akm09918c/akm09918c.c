@@ -391,21 +391,57 @@ static int decode(const uint8_t *buffer, sensor_frame_iterator_t *fit,
 	/* TODO */
 }
 
+/**
+ * @brief Get the number of frames from the RTIO sensor data buffer. We only support one-shot mode
+ * for now, so this will always be 1.
+ *
+ * @param buffer Data buffer.
+ * @param frame_count Output param for frame count.
+ * @return int 0 if successful or error code.
+ */
 static int get_frame_count(const uint8_t *buffer, uint16_t *frame_count)
 {
 	*frame_count = 1;
 	return 0;
 }
 
+/**
+ * @brief Get the timestamp value from an RTIO sensor data buffer
+ *
+ * @param buffer Data buffer.
+ * @param timestamp_ns Output param for timestamp.
+ * @return int 0 if successful or error code.
+ */
 static int get_timestamp(const uint8_t *buffer, uint64_t *timestamp_ns)
 {
 	*timestamp_ns = ((struct sensor_data_generic_header *)buffer)->timestamp_ns;
 	return 0;
 }
 
+/**
+ * @brief Get the shift offset used for encoding Q31 ints. All channels use a fixed shift of
+ * AKM09918C, so just verify the channel is supported
+ *
+ * @param buffer Unused
+ * @param channel_type Channel ID enum
+ * @param shift Output param to write shift to
+ * @return int 0 if successful, -EINVAL if unsupported channel.
+ */
 static int get_shift(const uint8_t *buffer, enum sensor_channel channel_type, int8_t *shift)
 {
-	/* TODO */
+	ARG_UNUSED(buffer);
+
+	switch (channel_type) {
+	case SENSOR_CHAN_MAGN_XYZ:
+	case SENSOR_CHAN_MAGN_X:
+	case SENSOR_CHAN_MAGN_Y:
+	case SENSOR_CHAN_MAGN_Z:
+		*shift = AKM09918C_RTIO_SHIFT;
+		return 0;
+	}
+
+	/* Unsupported channel */
+	return -EINVAL;
 }
 
 struct sensor_decoder_api akm09981c_decoder = {

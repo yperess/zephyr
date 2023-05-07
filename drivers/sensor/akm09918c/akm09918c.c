@@ -384,11 +384,88 @@ struct rtio_iodev_api __akm09918c_iodev_api = {
 	.submit = akm09918c_iodev_submit,
 };
 
+/**
+ * @brief Decode an RTIO sensor data buffer and extract samples in Q31 format.
+ *
+ * @param buffer Buffer received through RTIO context
+ * @param fit Frame iterator
+ * @param cit Channel iterator
+ * @param channels Pointer to list of channels
+ * @param values Pointer to memory for writing out decoded samples
+ * @param max_count Maximum number of Q31 samples to write to `values`.
+ * @return int 0 if successful or error code.
+ */
 static int decode(const uint8_t *buffer, sensor_frame_iterator_t *fit,
 		  sensor_channel_iterator_t *cit, enum sensor_channel *channels, q31_t *values,
 		  uint8_t max_count)
 {
-	/* TODO */
+	const struct sensor_data_generic_header *header =
+		(const struct sensor_data_generic_header *)buffer;
+	const int16_t *samples =
+		(const int16_t *)(buffer + sizeof(struct sensor_data_generic_header) +
+				  header->num_channels *
+					  sizeof(struct sensor_data_generic_channel));
+
+	int total_samples = 0;
+
+	if (!fit || !*fit) {
+		/* TODO: support reading multiple frames in one buffer. For now, consider it an
+		 * error if `fit > 0`.
+		 */
+		LOG_ERR("frame iterator NULL or non-zero");
+		return -EINVAL;
+	}
+
+	/* Track sample offset in the buffer */
+	int sample_offset = 0;
+
+	/* Calculate how many samples exist in buffer. */
+	for (int i = 0; i < header->num_channels; ++i) {
+		int num_samples_in_channel =
+			SENSOR_CHANNEL_3_AXIS(header->channel_info[i].channel) ? 3 : 1;
+
+		total_samples += num_samples_in_channel;
+
+		if (i < *cit) {
+			/* While looping, calculate sample offset for the current value of the
+			 * channel iterator. */
+			sample_offset += num_samples_in_channel;
+		}
+	}
+
+	int offset_in_triplet = 0;
+
+	/* Loop through channels, ensuring the channel iterator does not overrun the end of the
+	 * frame and that no more than `max_count` samples get written out.
+	 */
+	for (int i = 0; *cit < total_samples && i < max_count; i++) {
+		enum sensor_channel channel = header->channel_info[*cit].channel;
+
+		if (SENSOR_CHANNEL_3_AXIS(channel)) {
+			channels[i] = channel - 3 + offset_in_triplet;
+			values[i] = akm09981c_convert_raw_to_q31(
+				samples[sample_offset + offset_in_triplet]);
+			offset_in_triplet++;
+			if (offset_in_triplet == 3) {
+				*cit++;
+				sample_offset += 3;
+				offset_in_triplet = 0;
+			}
+		} else {
+			channels[i] = channel;
+			values[i] = akm09981c_convert_raw_to_q31(samples[sample_offset]);
+			sample_offset++;
+			*cit++;
+		}
+	}
+
+	if (*cit >= num_samples) {
+		/* All samples in frame have been read. Reset channel iterator and advance frame
+		 * iterator. */
+		*fit++;
+		*cit = 0;
+	}
+	return 0;
 }
 
 /**

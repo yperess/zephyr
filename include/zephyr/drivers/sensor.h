@@ -23,6 +23,7 @@
 #include <stdlib.h>
 
 #include <zephyr/device.h>
+#include <zephyr/drivers/sensor_data_types.h>
 #include <zephyr/dsp/types.h>
 #include <zephyr/rtio/rtio.h>
 #include <zephyr/sys/iterable_sections.h>
@@ -450,57 +451,61 @@ struct sensor_decoder_api {
 	 * @brief Get the number of frames in the current buffer.
 	 *
 	 * @param[in]  buffer The buffer provided on the :c:struct:`rtio` context.
+	 * @param[in]  channel The channel to get the count for
+	 * @param[in]  channel_idx The index of the channel
 	 * @param[out] frame_count The number of frames on the buffer (at least 1)
 	 * @return 0 on success
-	 * @return <0 on error
+	 * @return -ENOTSUP if the channel/channel_idx aren't found
 	 */
-	int (*get_frame_count)(const uint8_t *buffer, uint16_t *frame_count);
+	int (*get_frame_count)(const uint8_t *buffer, enum sensor_channel channel,
+			       size_t channel_idx, uint16_t *frame_count);
 
 	/**
-	 * @brief Get the timestamp associated with the first frame.
+	 * @brief Get the size required to decode a given channel
 	 *
-	 * @param[in]  buffer The buffer provided on the :c:struct:`rtio` context.
-	 * @param[out] timestamp_ns The closest timestamp for when the first frame was generated
-	 *             as attained by :c:func:`k_uptime_ticks`.
+	 * When decoding a single frame, use @p base_size. For every additional frame, add another
+	 * @p frame_size. As an example, to decode 3 frames use: 'base_size + 2 * frame_size'.
+	 *
+	 * @param[in]  channel The channel to query
+	 * @param[out] base_size The size of decoding the first frame
+	 * @param[out] frame_size The additional size of every additional frame
 	 * @return 0 on success
-	 * @return <0 on error
+	 * @return -ENOTSUP if the channel is not supported
 	 */
-	int (*get_timestamp)(const uint8_t *buffer, uint64_t *timestamp_ns);
+	int (*get_size_info)(enum sensor_channel channel, size_t *base_size, size_t *frame_size);
 
 	/**
-	 * @brief Get the shift count of a particular channel (multiplier)
+	 * @brief Decode up to @p max_count samples from the buffer
 	 *
-	 * This value can be used by shifting the q31_t value resulting in the SI unit of the
-	 * reading. It is guaranteed that the shift for a channel will not change between frames.
+	 * Decode samples of channel :c:enum:`sensor_channel` across multiple frames. If there exist
+	 * multiple instances of the same channel, @p channel_index is used to differentiate them.
+	 * As an example, assume a sensor provides 2 distance measurements:
 	 *
-	 * @param[in]  buffer The buffer provided on the :c:struct:`rtio` context.
-	 * @param[in]  channel_type The c:enum:`sensor_channel` to query
-	 * @param[out] shift The bit shift of the channel for this data buffer.
-	 * @return 0 on success
-	 * @return -EINVAL if the @p channel_type doesn't exist in the buffer
-	 * @return <0 on error
-	 */
-	int (*get_shift)(const uint8_t *buffer, enum sensor_channel channel_type, int8_t *shift);
-
-	/**
-	 * @brief Decode up to N samples from the buffer
+	 * @code{.c}
+	 * // Decode the first channel instance of 'distance'
+	 * decoder->decode(buffer, SENSOR_CHAN_DISTANCE, 0, &fit, 5, out);
+	 * ...
 	 *
-	 * This function will never wrap frames. If 1 channel is available in the current frame and
-	 * @p max_count is 2, only 1 channel will be decoded and the frame iterator will be modified
-	 * so that the next call to decode will begin at the next frame.
+	 * // Decode the second channel instance of 'distance'
+	 * decoder->decode(buffer, SENSOR_CHAN_DISTANCE, 1, &fit, 5, out);
+	 * @endcode
 	 *
 	 * @param[in]     buffer The buffer provided on the :c:struct:`rtio` context
+	 * @param[in]     channel The channel to decode
+	 * @param[in]     channel_idx The index of the channel
 	 * @param[in,out] fit The current frame iterator
-	 * @param[in,out] cit The current channel iterator
-	 * @param[out]    channels The channels that were decoded
-	 * @param[out]    values The scaled data that was decoded
 	 * @param[in]     max_count The maximum number of channels to decode.
-	 * @return
+	 * @param[out]    data_out The decoded data
+	 * @return 0 no more samples to decode
+	 * @return >0 the number of decoded frames
+	 * @return <0 on error
 	 */
-	int (*decode)(const uint8_t *buffer, sensor_frame_iterator_t *fit,
-		      sensor_channel_iterator_t *cit, enum sensor_channel *channels, q31_t *values,
-		      uint8_t max_count);
+	int (*decode)(const uint8_t *buffer, enum sensor_channel channel, size_t channel_idx,
+		      sensor_frame_iterator_t *fit, uint16_t max_count, void *data_out);
 };
+
+int sensor_natively_supported_channel_size_info(enum sensor_channel channel, size_t *base_size,
+						size_t *frame_size);
 
 /**
  * @typedef sensor_get_decoder_t

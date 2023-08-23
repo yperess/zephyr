@@ -127,6 +127,17 @@ struct sensor_uint64_data {
 	} readings[1];
 };
 
+/**
+ * A union of all sensor data types.
+ */
+union sensor_data_union {
+	struct sensor_three_axis_data three_axis;
+	struct sensor_occurrence_data occurence;
+	struct sensor_q31_data q31;
+	struct sensor_byte_data byte;
+	struct sensor_uint64_data uint64;
+};
+
 #ifdef __cplusplus
 }
 #endif

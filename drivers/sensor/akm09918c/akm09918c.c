@@ -9,6 +9,7 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/drivers/sensor_data_types.h>
 #include <zephyr/sys/__assert.h>
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/sys/util.h>
@@ -19,7 +20,18 @@
 
 LOG_MODULE_REGISTER(AKM09918C, CONFIG_SENSOR_LOG_LEVEL);
 
-static int akm09918c_sample_fetch(const struct device *dev, enum sensor_channel chan)
+/**
+ * @brief Perform the bus transaction to fetch samples
+ *
+ * @param dev Sensor device to operate on
+ * @param chan Channel ID to fetch
+ * @param x Location to write X channel sample.
+ * @param y Location to write Y channel sample.
+ * @param z Location to write Z channel sample.
+ * @return int 0 if successful or error code
+ */
+static int akm09918c_sample_fetch_helper(const struct device *dev, enum sensor_channel chan,
+					 int16_t *x, int16_t *y, int16_t *z)
 {
 	struct akm09918c_data *data = dev->data;
 	const struct akm09918c_config *cfg = dev->config;
@@ -54,11 +66,19 @@ static int akm09918c_sample_fetch(const struct device *dev, enum sensor_channel 
 		return -EBUSY;
 	}
 
-	data->x_sample = sys_le16_to_cpu(buf[1] | (buf[2] << 8));
-	data->y_sample = sys_le16_to_cpu(buf[3] | (buf[4] << 8));
-	data->z_sample = sys_le16_to_cpu(buf[5] | (buf[6] << 8));
+	*x = sys_le16_to_cpu(buf[1] | (buf[2] << 8));
+	*y = sys_le16_to_cpu(buf[3] | (buf[4] << 8));
+	*z = sys_le16_to_cpu(buf[5] | (buf[6] << 8));
 
 	return 0;
+}
+
+static int akm09918c_sample_fetch(const struct device *dev, enum sensor_channel chan)
+{
+	struct akm09918c_data *data = dev->data;
+
+	return akm09918c_sample_fetch_helper(dev, chan, &data->x_sample, &data->y_sample,
+					     &data->z_sample);
 }
 
 static void akm09918c_convert(struct sensor_value *val, int16_t sample)
@@ -149,13 +169,6 @@ static int akm09918c_attr_set(const struct device *dev, enum sensor_channel chan
 	return 0;
 }
 
-static const struct sensor_driver_api akm09918c_driver_api = {
-	.sample_fetch = akm09918c_sample_fetch,
-	.channel_get = akm09918c_channel_get,
-	.attr_get = akm09918c_attr_get,
-	.attr_set = akm09918c_attr_set,
-};
-
 static inline int akm09918c_check_who_am_i(const struct i2c_dt_spec *i2c)
 {
 	uint8_t buffer[2];
@@ -203,6 +216,148 @@ static int akm09918c_init(const struct device *dev)
 
 	return 0;
 }
+
+/*
+ * RTIO Sensor V2 API implementation
+ */
+
+static int akm09918c_submit(const struct device *dev, struct rtio_iodev_sqe *iodev_sqe)
+{
+	uint32_t min_buf_len = sizeof(struct akm09918c_encoded_data);
+	int rc;
+	uint8_t *buf;
+	uint32_t buf_len;
+	struct akm09918c_encoded_data *edata;
+
+	/* Get the buffer for the frame, it may be allocated dynamically by the rtio context */
+	rc = rtio_sqe_rx_buf(iodev_sqe, min_buf_len, min_buf_len, &buf, &buf_len);
+	if (rc != 0) {
+		LOG_ERR("Failed to get a read buffer of size %u bytes", min_buf_len);
+		rtio_iodev_sqe_err(iodev_sqe, rc);
+		return rc;
+	}
+
+	edata = (struct akm09918c_encoded_data *)buf;
+	edata->header.timestamp = k_ticks_to_ns_floor64(k_uptime_ticks());
+
+	rc = akm09918c_sample_fetch_helper(dev, SENSOR_CHAN_MAGN_XYZ, &edata->readings[0],
+					   &edata->readings[1], &edata->readings[2]);
+	if (rc != 0) {
+		LOG_ERR("Failed to fetch samples");
+		rtio_iodev_sqe_err(iodev_sqe, rc);
+		return rc;
+	}
+
+	rtio_iodev_sqe_ok(iodev_sqe, 0);
+
+	return 0;
+}
+
+/*
+ * RTIO Decoder API
+ */
+
+static int akm09918c_decoder_get_frame_count(const uint8_t *buffer, enum sensor_channel channel,
+					     size_t channel_idx, uint16_t *frame_count)
+{
+	ARG_UNUSED(buffer);
+	ARG_UNUSED(channel);
+	ARG_UNUSED(channel_idx);
+
+	/* This sensor lacks a FIFO; there will always only be one frame at a time. */
+	*frame_count = 1;
+	return 0;
+}
+
+static int akm09918c_decoder_get_size_info(enum sensor_channel channel, size_t *base_size,
+					   size_t *frame_size)
+{
+	switch (channel) {
+	case SENSOR_CHAN_MAGN_X:
+	case SENSOR_CHAN_MAGN_Y:
+	case SENSOR_CHAN_MAGN_Z:
+	case SENSOR_CHAN_MAGN_XYZ:
+		*base_size = sizeof(struct sensor_three_axis_data);
+		*frame_size = sizeof(struct sensor_three_axis_sample_data);
+		return 0;
+	default:
+		return -ENOTSUP;
+	}
+}
+
+/** Fixed shift value to use. All channels (MAGN_X, _Y, and _Z) have the same fixed range of
+ *  +/- 49.12 Gauss.
+ */
+#define AKM09918C_SHIFT (6)
+
+static int akm09918c_convert_raw_to_q31(int16_t reading, q31_t *out)
+{
+	int64_t intermediate = ((int64_t)reading * AKM09918C_MICRO_GAUSS_PER_BIT) *
+			       ((int64_t)INT32_MAX + 1) /
+			       ((1 << AKM09918C_SHIFT) * INT64_C(1000000));
+
+	*out = CLAMP(intermediate, INT32_MIN, INT32_MAX);
+	return 0;
+}
+
+static int akm09918c_decoder_decode(const uint8_t *buffer, enum sensor_channel channel,
+				    size_t channel_idx, sensor_frame_iterator_t *fit,
+				    uint16_t max_count, void *data_out)
+{
+	const struct akm09918c_encoded_data *edata = (const struct akm09918c_encoded_data *)buffer;
+
+	if (*fit != 0) {
+		return 0;
+	}
+
+	switch (channel) {
+	case SENSOR_CHAN_MAGN_X:
+	case SENSOR_CHAN_MAGN_Y:
+	case SENSOR_CHAN_MAGN_Z:
+	case SENSOR_CHAN_MAGN_XYZ: {
+		struct sensor_three_axis_data *out = data_out;
+
+		out->header.base_timestamp_ns = edata->header.timestamp;
+		out->header.reading_count = 1;
+		out->shift = AKM09918C_SHIFT;
+
+		akm09918c_convert_raw_to_q31(edata->readings[0], &out->readings[0].x);
+		akm09918c_convert_raw_to_q31(edata->readings[1], &out->readings[0].y);
+		akm09918c_convert_raw_to_q31(edata->readings[2], &out->readings[0].z);
+		*fit = 1;
+
+		return 1;
+	}
+	default:
+		return -EINVAL;
+	}
+}
+
+SENSOR_DECODER_API_DT_DEFINE() = {
+	.get_frame_count = akm09918c_decoder_get_frame_count,
+	.get_size_info = akm09918c_decoder_get_size_info,
+	.decode = akm09918c_decoder_decode,
+};
+
+static int akm09918c_get_decoder(const struct device *dev,
+				 const struct sensor_decoder_api **decoder)
+{
+	ARG_UNUSED(dev);
+	*decoder = &SENSOR_DECODER_NAME();
+
+	return 0;
+}
+
+static const struct sensor_driver_api akm09918c_driver_api = {
+	.sample_fetch = akm09918c_sample_fetch,
+	.channel_get = akm09918c_channel_get,
+	.attr_get = akm09918c_attr_get,
+	.attr_set = akm09918c_attr_set,
+#ifdef CONFIG_SENSOR_ASYNC_API
+	.submit = akm09918c_submit,
+	.get_decoder = akm09918c_get_decoder,
+#endif
+};
 
 #define AKM09918C_DEFINE(inst)                                                                     \
 	static struct akm09918c_data akm09918c_data_##inst;                                        \

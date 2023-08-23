@@ -74,4 +74,17 @@ static inline void akm09918c_reg_to_hz(uint8_t reg, struct sensor_value *val)
 	}
 }
 
+/*
+ * RTIO types
+ */
+
+struct akm09918c_decoder_header {
+	uint64_t timestamp;
+} __attribute__((__packed__));
+
+struct akm09918c_encoded_data {
+	struct akm09918c_decoder_header header;
+	int16_t readings[3];
+};
+
 #endif /* ZEPHYR_DRIVERS_SENSOR_AKM09918C_AKM09918C_H_ */

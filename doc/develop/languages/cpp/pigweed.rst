@@ -4,8 +4,8 @@ Pigweed C++ Support
 ###################
 
 Additional C++ features that are currently not natively supported by Zephyr are
-provided through a 3rd party module: `Pigweed`_. Pigweed provides some STL like
-functionality like:
+provided through a 3rd party module: `Pigweed`_. Pigweed provides some standard
+library functionality like:
 
 .. list-table:: Pigweed support
    :header-rows: 1
@@ -28,9 +28,9 @@ functionality like:
 Navigating Pigweed
 ******************
 
-Pigweed uses a different term for what a ``module`` is when compared to Zephyr.
-When reviewing the documentation on `Pigweed`_'s page, a ``module`` can be
-viewed as a collection of related libraries.
+Pigweed uses a different definition for what a ``module`` is when compared to
+Zephyr. When reviewing the documentation on `Pigweed`_'s page, a ``module`` can
+be viewed as a collection of related libraries.
 
 .. _pigweed_example_lock_guard:
 
@@ -77,7 +77,8 @@ top.
 
 .. code-block:: console
 
-   . pigweed/bootstrap.sh
+   cd ~/zephyrproject
+   source modules/lib/pigweed/bootstrap.sh
    pip install zephyr/scripts/requirements.txt
 
 Once installed, the environment is set up. Future work sessions should enter
@@ -85,17 +86,13 @@ the virtual environment via a call to:
 
 .. code-block:: console
 
-   . pigweed/activate.sh
+   source modules/lib/pigweed/activate.sh
 
 Updating:
 =========
 
-You should re-run the bootstrapping process when:
-
-* A call to ``west update`` changes the Pigweed SHA, the bootstrap process
-  should be repeated.
-* A call to ``west update`` changes the Zephyr SHA, the call to
-  ``pip install`` should be repeated
+You should re-run the bootstrapping process following any ``west update`` that
+modifies either the Zephyr main tree or the Pigweed module.
 
 Step 3: Use Pigweed
 *******************

@@ -1,0 +1,22 @@
+module(
+    name = "zephyr",
+    version = "0.1",
+)
+
+PY_VERSION = "3.11"
+
+bazel_dep(name = "rules_python", version = "0.31.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = PY_VERSION,
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "py_deps",
+    python_version = PY_VERSION,
+    requirements_lock = "@zephyr//scripts:requirements-base-lock.txt",
+)
+use_repo(pip, "py_deps")

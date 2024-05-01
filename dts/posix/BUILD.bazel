@@ -1,0 +1,8 @@
+load("//:defs.bzl", "dts_library")
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "posix",
+    srcs = ["posix.dtsi"],
+)

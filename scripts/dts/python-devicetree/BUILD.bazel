@@ -1,0 +1,10 @@
+package(default_visibility = ["//visibility:public"])
+load("@py_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "devicetree",
+    srcs = glob(["src/devicetree/*.py"]),
+    deps = [
+        requirement("pyyaml"),
+    ]
+)

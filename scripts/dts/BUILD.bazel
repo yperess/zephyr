@@ -1,0 +1,16 @@
+package(default_visibility = ["//visibility:public"])
+
+py_binary(
+    name = "gen_defines",
+    srcs = ["gen_defines.py"],
+    deps = [
+        "//scripts/dts/python-devicetree:devicetree",
+    ]
+)
+
+#genrule(
+#    name = "gen_defines",
+#    srcs = [":gen_defines_lib"],
+#    outs = ["devicetree_generated.h", "dts_out.dts"],
+#    cmd = "python3 $(location :gen_defines_lib) $@",
+#)

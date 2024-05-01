@@ -1,0 +1,18 @@
+load("//:defs.bzl", "dts_library")
+
+package(default_visibility = ["//visibility:public"])
+
+dts_library(
+    name = "native_sim",
+    srcs = ["native_sim.dts"],
+    references = [
+        "//dts/posix:posix",
+        "//dts/common:skeleton",
+        "//:dt_bindings",
+    ],
+    includes = [
+        "//include",
+        "//dts",
+        "//dts/common",
+    ],
+)

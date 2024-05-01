@@ -1,0 +1,9 @@
+#load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+
+package(default_visibility = ["//visibility:public"])
+
+#compile_pip_requirements(
+#    name = "requirements_base",
+#    requirements_in = "requirements-base.txt",
+#    requirements_txt = "requirements-base-lock.txt",
+#)

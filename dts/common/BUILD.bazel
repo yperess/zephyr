@@ -1,0 +1,12 @@
+load("//:defs.bzl", "dts_library")
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "skeleton",
+    srcs = [
+        "freq.h",
+        "mem.h",
+        "skeleton.dtsi",
+    ],
+)

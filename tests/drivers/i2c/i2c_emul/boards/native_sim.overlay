@@ -12,6 +12,7 @@
 		#size-cells = <0>;
 		#forward-cells = <1>;
 		reg = <0x400 4>;
+		target-pio-mode;
 	};
 
 	i2c2: i2c@500 {
@@ -22,6 +23,7 @@
 		#size-cells = <0>;
 		#forward-cells = <1>;
 		reg = <0x500 4>;
+		target-pio-mode;
 	};
 };
 
